@@ -1,1017 +1,214 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نظام إدارة الرواتب</title>
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
---c1:#0f2942;--c2:#1a4a7a;--c3:#2563eb;--c4:#3b82f6;--c5:#93c5fd;
---cg:#f8fafc;--cg2:#f1f5f9;--cg3:#e2e8f0;--cg4:#94a3b8;--cg5:#64748b;
---cs:#10b981;--cw:#f59e0b;--ce:#ef4444;--cp:#8b5cf6;
---txt:#1e293b;--txt2:#64748b;
---bg:#ffffff;--bg2:#f8fafc;
---border:#e2e8f0;
---radius-sm:6px;--radius-md:8px;--radius-lg:12px;
-}
-body{font-family:'Tajawal',sans-serif;direction:rtl;background:#f1f5f9;min-height:100vh}
+// ============================================================
+//  نظام إدارة الرواتب — Google Apps Script Web App
+//  انسخ هذا الكود كاملاً في محرر Apps Script الخاص بجدول بياناتك
+//  ثم: نشر ← نشر كتطبيق ويب ← الوصول: الجميع
+// ============================================================
 
-.app{min-height:100vh;background:var(--bg);max-width:1400px;margin:0 auto;box-shadow:0 0 40px rgba(0,0,0,0.08)}
-.header{background:var(--c1);color:#fff;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;min-height:64px}
-.header h1{font-size:16px;font-weight:500;display:flex;align-items:center;gap:8px}
-.header-actions{display:flex;gap:8px;align-items:center}
-.hbtn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 14px;border-radius:var(--radius-md);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background 0.15s;font-family:'Tajawal',sans-serif}
-.hbtn:hover{background:rgba(255,255,255,0.22)}
-.hbtn.success{background:var(--cs);border-color:var(--cs)}
-.hbtn.success:hover{background:#059669}
+// ضع معرّف جدول البيانات هنا (من رابط الشيت)
+const SHEET_ID = 'YOUR_SPREADSHEET_ID_HERE';
 
-.nav{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;gap:0;overflow-x:auto}
-.nav-item{padding:12px 16px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:var(--txt2);white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all 0.15s;font-family:'Tajawal',sans-serif}
-.nav-item:hover{color:var(--txt);background:var(--bg)}
-.nav-item.active{color:var(--c3);border-bottom-color:var(--c3);background:var(--bg)}
+// أسماء الأوراق — يجب أن تطابق أسماء الشيتات في جدول البيانات
+const SHEETS = ['employees', 'loans', 'deductions', 'arrears', 'bonuses', 'attendance', 'settings'];
 
-.content{padding:1.5rem}
-
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem}
-.kpi{background:var(--bg2);border-radius:var(--radius-md);padding:1rem;border:1px solid var(--border)}
-.kpi-label{font-size:12px;color:var(--txt2);margin-bottom:6px;display:flex;align-items:center;gap:5px}
-.kpi-val{font-size:22px;font-weight:500;color:var(--txt)}
-.kpi-sub{font-size:11px;color:var(--txt2);margin-top:3px}
-.kpi.cs .kpi-val{color:var(--cs)}.kpi.cw .kpi-val{color:var(--cw)}.kpi.ce .kpi-val{color:var(--ce)}.kpi.cp .kpi-val{color:var(--cp)}
-
-.section-title{font-size:15px;font-weight:500;color:var(--txt);margin-bottom:1rem;display:flex;align-items:center;gap:8px;justify-content:space-between}
-.section-title-left{display:flex;align-items:center;gap:8px}
-
-.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-md)}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:var(--bg2);padding:10px 12px;text-align:right;font-weight:500;color:var(--txt2);border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--txt);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:var(--bg2)}
-
-.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
-.badge.active{background:#dcfce7;color:#15803d}
-.badge.inactive{background:#fee2e2;color:#b91c1c}
-.badge.leave{background:#fef9c3;color:#a16207}
-.badge.pending{background:#ede9fe;color:#7c3aed}
-
-.btn{padding:6px 14px;border-radius:var(--radius-md);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;border:1px solid var(--border);background:var(--bg);color:var(--txt);font-family:'Tajawal',sans-serif}
-.btn:hover{background:var(--bg2)}
-.btn.primary{background:var(--c3);color:#fff;border-color:var(--c3)}
-.btn.primary:hover{background:var(--c4)}
-.btn.danger{background:var(--ce);color:#fff;border-color:var(--ce)}
-.btn.success{background:var(--cs);color:#fff;border-color:var(--cs)}
-.btn.sm{padding:4px 10px;font-size:12px}
-.btn.warning{background:var(--cw);color:#fff;border-color:var(--cw)}
-
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.form-group{display:flex;flex-direction:column;gap:5px}
-.form-group label{font-size:12px;color:var(--txt2);font-weight:500}
-.form-group input,.form-group select,.form-group textarea{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:13px;background:var(--bg);color:var(--txt);font-family:'Tajawal',sans-serif;direction:rtl}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--c3)}
-.form-group textarea{resize:vertical;min-height:70px}
-
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:flex-start;justify-content:center;padding-top:40px;z-index:1000}
-.modal{background:var(--bg);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;width:min(580px,95%);max-height:85vh;overflow-y:auto}
-.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.modal-header h3{font-size:16px;font-weight:500;color:var(--txt)}
-.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;padding-top:12px;border-top:1px solid var(--border)}
-
-.alert{padding:10px 14px;border-radius:var(--radius-md);font-size:13px;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
-.alert.success{background:#dcfce7;color:#15803d;border:1px solid #86efac}
-.alert.danger{background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5}
-.alert.info{background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd}
-.alert.warning{background:#fef9c3;color:#a16207;border:1px solid #fde047}
-
-.progress-bar{height:6px;background:var(--bg2);border-radius:3px;overflow:hidden}
-.progress-fill{height:100%;border-radius:3px;transition:width 0.3s}
-
-.gs-section{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.25rem;margin-bottom:1rem}
-.gs-section h4{font-size:13px;font-weight:500;color:var(--txt2);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px}
-
-.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:6px}
-.dot.green{background:var(--cs)}.dot.red{background:var(--ce)}.dot.amber{background:var(--cw)}
-
-.empty{text-align:center;padding:3rem;color:var(--txt2);font-size:14px}
-
-.summary-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem}
-.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;text-align:center}
-.sc-val{font-size:18px;font-weight:500;color:var(--txt)}
-.sc-lbl{font-size:11px;color:var(--txt2);margin-top:3px}
-
-.actions-row{display:flex;gap:6px;flex-wrap:wrap}
-
-.search-bar{display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-wrap:wrap}
-.search-bar input,.search-bar select{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:13px;background:var(--bg);color:var(--txt);font-family:'Tajawal',sans-serif}
-
-.payslip{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;max-width:520px;margin:0 auto}
-.payslip-header{text-align:center;padding-bottom:1rem;border-bottom:1px solid var(--border);margin-bottom:1rem}
-.payslip-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
-.payslip-row.bold{font-weight:500;border-top:1px solid var(--border);margin-top:6px;padding-top:10px}
-.payslip-row.total{background:var(--c1);color:#fff;padding:10px 12px;border-radius:var(--radius-md);margin-top:8px}
-
-/* Loading overlay */
-#loading-overlay{position:fixed;inset:0;background:rgba(15,41,66,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;color:#fff;gap:16px}
-.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-</style>
-</head>
-<body>
-
-<div id="loading-overlay">
-  <div class="spinner"></div>
-  <div style="font-size:15px;font-weight:500">جاري تحميل البيانات من Google Sheets...</div>
-</div>
-
-<div class="app" id="app">
-  <div class="header">
-    <div style="display:flex;align-items:center;gap:12px">
-      <i class="ti ti-building-bank" style="font-size:22px"></i>
-      <div>
-        <div style="font-size:16px;font-weight:500">نظام إدارة الرواتب</div>
-        <div style="font-size:11px;opacity:0.7" id="company-name-header">جاري التحميل...</div>
-      </div>
-    </div>
-    <div class="header-actions">
-      <div id="gs-status" style="font-size:12px;opacity:0.8;display:flex;align-items:center;gap:5px">
-        <span class="dot amber"></span> جاري الاتصال...
-      </div>
-      <button class="hbtn" onclick="loadAllData()"><i class="ti ti-refresh"></i> تحديث</button>
-    </div>
-  </div>
-
-  <div class="nav" id="main-nav">
-    <div class="nav-item active" onclick="showView('dashboard')" data-view="dashboard"><i class="ti ti-dashboard"></i> لوحة التحكم</div>
-    <div class="nav-item" onclick="showView('employees')" data-view="employees"><i class="ti ti-users"></i> الموظفون</div>
-    <div class="nav-item" onclick="showView('salaries')" data-view="salaries"><i class="ti ti-cash"></i> الرواتب</div>
-    <div class="nav-item" onclick="showView('loans')" data-view="loans"><i class="ti ti-credit-card"></i> السلف والقروض</div>
-    <div class="nav-item" onclick="showView('deductions')" data-view="deductions"><i class="ti ti-minus-vertical"></i> الخصومات</div>
-    <div class="nav-item" onclick="showView('arrears')" data-view="arrears"><i class="ti ti-clock"></i> المتأخرات</div>
-    <div class="nav-item" onclick="showView('bonuses')" data-view="bonuses"><i class="ti ti-star"></i> الحوافز</div>
-    <div class="nav-item" onclick="showView('attendance')" data-view="attendance"><i class="ti ti-calendar-check"></i> الحضور والإجازات</div>
-    <div class="nav-item" onclick="showView('reports')" data-view="reports"><i class="ti ti-report"></i> التقارير</div>
-    <div class="nav-item" onclick="showView('payslips')" data-view="payslips"><i class="ti ti-file-text"></i> قسائم الراتب</div>
-    <div class="nav-item" onclick="showView('settings')" data-view="settings"><i class="ti ti-adjustments"></i> الإعدادات</div>
-  </div>
-
-  <div class="content" id="main-content"></div>
-</div>
-
-<script>
-// ===================== CONFIG =====================
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdSOxKS2ZskS8CT9_A95hgW7MoRhUfrxcM2wMoPxA61Z9h3N0496kXyQwfgsM9eipMUQ/exec';
-
-// ===================== STATE =====================
-const DB = {
-  settings:{company:'نظام الرواتب',currency:'ريال',gosi:9,workDays:30},
-  employees:[],loans:[],deductions:[],arrears:[],bonuses:[],attendance:[],
-  nextId:{emp:1,loan:1,ded:1,arr:1,bon:1,att:1}
-};
-let currentView='dashboard';
-let alertTimer=null;
-
-// ===================== GS API =====================
-async function gsCall(action, payload={}) {
-  try {
-    const body = JSON.stringify({action, payload});
-    const res = await fetch(SCRIPT_URL, {method:'POST', body, headers:{'Content-Type':'text/plain'}});
-    const json = await res.json();
-    return json;
-  } catch(e) {
-    console.error('GS Error:', e);
-    return {success:false, error:e.toString()};
-  }
-}
-
-async function loadAllData() {
-  showLoading(true);
-  updateGSStatus(null);
-  try {
-    const res = await gsCall('getAll');
-    if(res.success && res.data) {
-      const d = res.data;
-      DB.employees  = (d.employees  ||[]).map(normalizeEmp);
-      DB.loans      = (d.loans      ||[]).map(normalizeLoan);
-      DB.deductions = (d.deductions ||[]).map(normalizeDed);
-      DB.arrears    = (d.arrears    ||[]).map(normalizeArr);
-      DB.bonuses    = (d.bonuses    ||[]).map(normalizeBon);
-      DB.attendance = (d.attendance ||[]).map(normalizeAtt);
-      if(d.settings) {
-        Object.assign(DB.settings, d.settings);
-        document.getElementById('company-name-header').textContent = DB.settings.company||'نظام الرواتب';
-      }
-      recalcNextIds();
-      updateGSStatus(true);
-      showAlert('تم تحميل البيانات بنجاح');
-    } else {
-      updateGSStatus(false);
-      showAlert('تعذر تحميل البيانات: '+(res.error||'خطأ غير معروف'),'danger');
-    }
-  } catch(e) {
-    updateGSStatus(false);
-    showAlert('خطأ في الاتصال بـ Google Sheets','danger');
-  }
-  showLoading(false);
-  showView(currentView);
-}
-
-async function syncRecord(sheet, record, operation='upsert') {
-  // operation: upsert | delete
-  const res = await gsCall('syncRecord', {sheet, record, operation});
-  if(!res.success) showAlert('خطأ في المزامنة: '+(res.error||''),'danger');
-  return res.success;
-}
-
-function recalcNextIds() {
-  const maxId = arr => arr.length ? Math.max(...arr.map(x=>Number(x.id)||0))+1 : 1;
-  DB.nextId.emp  = maxId(DB.employees);
-  DB.nextId.loan = maxId(DB.loans);
-  DB.nextId.ded  = maxId(DB.deductions);
-  DB.nextId.arr  = maxId(DB.arrears);
-  DB.nextId.bon  = maxId(DB.bonuses);
-  DB.nextId.att  = maxId(DB.attendance);
-}
-
-// normalizers cast types from sheet strings
-function normalizeEmp(e)  { return {...e, id:Number(e.id), basic:Number(e.basic)||0, housing:Number(e.housing)||0, transport:Number(e.transport)||0, phone:Number(e.phone)||0, other:Number(e.other)||0}; }
-function normalizeLoan(l) { return {...l, id:Number(l.id), empId:Number(l.empId), amount:Number(l.amount)||0, remaining:Number(l.remaining)||0, monthly:Number(l.monthly)||0}; }
-function normalizeDed(d)  { return {...d, id:Number(d.id), empId:Number(d.empId), amount:Number(d.amount)||0}; }
-function normalizeArr(a)  { return {...a, id:Number(a.id), empId:Number(a.empId), amount:Number(a.amount)||0, months:Number(a.months)||1}; }
-function normalizeBon(b)  { return {...b, id:Number(b.id), empId:Number(b.empId), amount:Number(b.amount)||0}; }
-function normalizeAtt(a)  { return {...a, id:Number(a.id), empId:Number(a.empId), present:Number(a.present)||0, absent:Number(a.absent)||0, late:Number(a.late)||0, leaves:Number(a.leaves)||0, approved: a.approved==='true'||a.approved===true}; }
-
-// ===================== HELPERS =====================
-function showLoading(v) {
-  document.getElementById('loading-overlay').style.display = v?'flex':'none';
-}
-function updateGSStatus(connected) {
-  const el=document.getElementById('gs-status');
-  if(!el)return;
-  if(connected===null) el.innerHTML=`<span class="dot amber"></span> جاري الاتصال...`;
-  else if(connected)   el.innerHTML=`<span class="dot green"></span> متصل بـ Google Sheets`;
-  else                 el.innerHTML=`<span class="dot red"></span> غير متصل`;
-}
-function showAlert(msg,type='success'){
-  const existing=document.getElementById('sys-alert');
-  if(existing)existing.remove();
-  if(alertTimer)clearTimeout(alertTimer);
-  const d=document.createElement('div');
-  d.id='sys-alert';d.className=`alert ${type}`;
-  d.style.cssText='position:fixed;top:70px;right:20px;z-index:9998;min-width:280px;max-width:400px;box-shadow:0 4px 12px rgba(0,0,0,0.15)';
-  d.innerHTML=`<i class="ti ti-${type==='success'?'check':'alert-circle'}"></i> ${msg}`;
-  document.body.appendChild(d);
-  alertTimer=setTimeout(()=>d.remove(),3500);
-}
-function getEmp(id){return DB.employees.find(e=>e.id===Number(id));}
-function fmtMoney(n){return Number(n||0).toLocaleString('ar-SA',{minimumFractionDigits:0})+' '+DB.settings.currency;}
-function totalSalary(emp){return (emp.basic||0)+(emp.housing||0)+(emp.transport||0)+(emp.phone||0)+(emp.other||0);}
-function calcPayroll(emp,month){
-  const total=totalSalary(emp);
-  const gosi=Math.round((emp.basic||0)*Number(DB.settings.gosi||9)/100);
-  const loans=DB.loans.filter(l=>l.empId===emp.id&&l.status==='active').reduce((s,l)=>s+Number(l.monthly||0),0);
-  const deds=DB.deductions.filter(d=>d.empId===emp.id&&d.month===month&&d.status!=='cancelled').reduce((s,d)=>s+Number(d.amount||0),0);
-  const bons=DB.bonuses.filter(b=>b.empId===emp.id&&b.month===month&&b.status==='approved').reduce((s,b)=>s+Number(b.amount||0),0);
-  const arr=DB.arrears.filter(a=>a.empId===emp.id&&a.status==='paid').reduce((s,a)=>s+Number(a.amount||0),0);
-  const totalDed=gosi+loans+deds;
-  const net=total+bons+arr-totalDed;
-  return{total,gosi,loans,deds,bons,arr,totalDed,net};
-}
-function formatMonth(m){
-  const months={1:'يناير',2:'فبراير',3:'مارس',4:'أبريل',5:'مايو',6:'يونيو',7:'يوليو',8:'أغسطس',9:'سبتمبر',10:'أكتوبر',11:'نوفمبر',12:'ديسمبر'};
-  const[y,mo]=m.split('-'); return `${months[parseInt(mo)]} ${y}`;
-}
-function currentMonth(){
-  const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-}
-
-// ===================== ROUTING =====================
-function showView(v){
-  currentView=v;
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.view===v));
-  const c=document.getElementById('main-content');
-  const views={dashboard:renderDashboard,employees:renderEmployees,salaries:renderSalaries,loans:renderLoans,deductions:renderDeductions,arrears:renderArrears,bonuses:renderBonuses,attendance:renderAttendance,reports:renderReports,payslips:renderPayslips,settings:renderSettings};
-  c.innerHTML='';
-  if(views[v])views[v](c);
-}
-
-// ===================== DASHBOARD =====================
-function renderDashboard(c){
-  const month=currentMonth();
-  const activeEmps=DB.employees.filter(e=>e.status==='active').length;
-  const totalPayroll=DB.employees.filter(e=>e.status==='active').reduce((s,e)=>s+totalSalary(e),0);
-  const totalLoans=DB.loans.filter(l=>l.status==='active').reduce((s,l)=>s+Number(l.remaining||0),0);
-  const pendingArrs=DB.arrears.filter(a=>a.status==='pending').reduce((s,a)=>s+Number(a.amount||0),0);
-  const pendingBons=DB.bonuses.filter(b=>b.status==='pending').length;
-  if(!DB.employees.length){
-    c.innerHTML=`<div class="empty"><i class="ti ti-database-off" style="font-size:40px;display:block;margin-bottom:1rem"></i>لا توجد بيانات. يرجى التأكد من إعداد Google Sheets وضغط تحديث.<br><button class="btn primary" style="margin-top:1rem" onclick="loadAllData()"><i class="ti ti-refresh"></i> تحميل البيانات</button></div>`;
-    return;
-  }
-  c.innerHTML=`
-  <div class="kpi-grid">
-    <div class="kpi"><div class="kpi-label"><i class="ti ti-users"></i> إجمالي الموظفين</div><div class="kpi-val">${DB.employees.length}</div><div class="kpi-sub">${activeEmps} نشط</div></div>
-    <div class="kpi cs"><div class="kpi-label"><i class="ti ti-cash"></i> رواتب هذا الشهر</div><div class="kpi-val">${fmtMoney(totalPayroll)}</div><div class="kpi-sub">${formatMonth(month)}</div></div>
-    <div class="kpi cw"><div class="kpi-label"><i class="ti ti-credit-card"></i> سلف مستحقة</div><div class="kpi-val">${fmtMoney(totalLoans)}</div><div class="kpi-sub">${DB.loans.filter(l=>l.status==='active').length} نشط</div></div>
-    <div class="kpi ce"><div class="kpi-label"><i class="ti ti-clock"></i> متأخرات معلقة</div><div class="kpi-val">${fmtMoney(pendingArrs)}</div><div class="kpi-sub">${DB.arrears.filter(a=>a.status==='pending').length} بند</div></div>
-    <div class="kpi cp"><div class="kpi-label"><i class="ti ti-star"></i> حوافز معلقة</div><div class="kpi-val">${pendingBons}</div><div class="kpi-sub">بانتظار الاعتماد</div></div>
-  </div>
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-list"></i> ملخص الرواتب - ${formatMonth(month)}</div>
-    <button class="btn primary sm" onclick="showView('payslips')"><i class="ti ti-file-text"></i> عرض القسائم</button></div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>الموظف</th><th>القسم</th><th>الراتب الإجمالي</th><th>الخصومات</th><th>الحوافز</th><th>صافي الراتب</th><th>الحالة</th></tr></thead>
-    <tbody>${DB.employees.map(emp=>{
-      const p=calcPayroll(emp,month);
-      return `<tr><td><b>${emp.name}</b></td><td>${emp.dept}</td><td>${fmtMoney(p.total)}</td><td style="color:var(--ce)">${fmtMoney(p.totalDed)}</td><td style="color:var(--cs)">${fmtMoney(p.bons)}</td><td><b>${fmtMoney(p.net)}</b></td><td>${emp.status==='active'?'<span class="badge active">نشط</span>':'<span class="badge leave">إجازة</span>'}</td></tr>`;
-    }).join('')}</tbody>
-  </table></div>`;
-}
-
-// ===================== EMPLOYEES =====================
-function renderEmployees(c){
-  const depts=[...new Set(DB.employees.map(e=>e.dept).filter(Boolean))];
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-users"></i> إدارة الموظفين</div>
-    <button class="btn primary" onclick="openAddEmployee()"><i class="ti ti-plus"></i> إضافة موظف</button></div>
-  <div class="search-bar">
-    <input type="text" id="emp-search" placeholder="بحث..." oninput="renderEmpTable()" style="max-width:260px">
-    <select id="emp-dept-filter" onchange="renderEmpTable()"><option value="">كل الأقسام</option>${depts.map(d=>`<option>${d}</option>`).join('')}</select>
-    <select id="emp-status-filter" onchange="renderEmpTable()"><option value="">كل الحالات</option><option value="active">نشط</option><option value="leave">إجازة</option><option value="inactive">متوقف</option></select>
-  </div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>#</th><th>الموظف</th><th>القسم</th><th>المسمى</th><th>الأساسي</th><th>الإجمالي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
-    <tbody id="emp-tbody"></tbody>
-  </table></div>`;
-  renderEmpTable();
-}
-function renderEmpTable(){
-  const search=(document.getElementById('emp-search')||{}).value||'';
-  const dept=(document.getElementById('emp-dept-filter')||{}).value||'';
-  const status=(document.getElementById('emp-status-filter')||{}).value||'';
-  const tbody=document.getElementById('emp-tbody');if(!tbody)return;
-  const filtered=DB.employees.filter(e=>
-    (!search||e.name.includes(search))&&(!dept||e.dept===dept)&&(!status||e.status===status));
-  tbody.innerHTML=filtered.map((e,i)=>`<tr>
-    <td style="color:var(--txt2)">${i+1}</td>
-    <td><b>${e.name}</b><br><small style="color:var(--txt2)">${e.natId||''}</small></td>
-    <td>${e.dept||''}</td><td>${e.pos||''}</td>
-    <td>${fmtMoney(e.basic)}</td><td><b>${fmtMoney(totalSalary(e))}</b></td>
-    <td>${e.status==='active'?'<span class="badge active">نشط</span>':e.status==='leave'?'<span class="badge leave">إجازة</span>':'<span class="badge inactive">متوقف</span>'}</td>
-    <td><div class="actions-row">
-      <button class="btn sm" onclick="openEditEmployee(${e.id})"><i class="ti ti-edit"></i></button>
-      <button class="btn sm" onclick="viewPayslipForEmp(${e.id})"><i class="ti ti-file-text"></i></button>
-      <button class="btn sm danger" onclick="deleteEmployee(${e.id})"><i class="ti ti-trash"></i></button>
-    </div></td>
-  </tr>`).join('')||'<tr><td colspan="8" class="empty">لا يوجد موظفون</td></tr>';
-}
-function openAddEmployee(){showModal('إضافة موظف جديد',empFormHTML(null),()=>saveEmployee(null));}
-function openEditEmployee(id){showModal('تعديل بيانات الموظف',empFormHTML(getEmp(id)),()=>saveEmployee(id));}
-function empFormHTML(emp){
-  const v=emp||{name:'',dept:'',pos:'',basic:'',housing:'',transport:500,phone:200,other:0,iban:'',natId:'',joinDate:'',status:'active'};
-  return `<div class="form-grid">
-    <div class="form-group"><label>الاسم الكامل</label><input id="f-name" value="${v.name||''}"></div>
-    <div class="form-group"><label>رقم الهوية</label><input id="f-natid" value="${v.natId||''}"></div>
-    <div class="form-group"><label>القسم</label><input id="f-dept" value="${v.dept||''}" list="dept-list">
-      <datalist id="dept-list">${[...new Set(DB.employees.map(e=>e.dept).filter(Boolean))].map(d=>`<option>${d}</option>`).join('')}</datalist></div>
-    <div class="form-group"><label>المسمى الوظيفي</label><input id="f-pos" value="${v.pos||''}"></div>
-    <div class="form-group"><label>الراتب الأساسي</label><input id="f-basic" type="number" value="${v.basic||''}"></div>
-    <div class="form-group"><label>بدل السكن</label><input id="f-housing" type="number" value="${v.housing||''}"></div>
-    <div class="form-group"><label>بدل النقل</label><input id="f-transport" type="number" value="${v.transport||500}"></div>
-    <div class="form-group"><label>بدل الهاتف</label><input id="f-phone" type="number" value="${v.phone||200}"></div>
-    <div class="form-group"><label>بدلات أخرى</label><input id="f-other" type="number" value="${v.other||0}"></div>
-    <div class="form-group"><label>رقم الآيبان</label><input id="f-iban" value="${v.iban||''}"></div>
-    <div class="form-group"><label>تاريخ الالتحاق</label><input id="f-join" type="date" value="${v.joinDate||''}"></div>
-    <div class="form-group"><label>الحالة</label><select id="f-status">
-      <option value="active" ${(v.status||'active')==='active'?'selected':''}>نشط</option>
-      <option value="leave" ${v.status==='leave'?'selected':''}>إجازة</option>
-      <option value="inactive" ${v.status==='inactive'?'selected':''}>متوقف</option>
-    </select></div>
-  </div>`;
-}
-async function saveEmployee(id){
-  const g=x=>(document.getElementById(x)||{value:''});
-  const data={name:g('f-name').value,dept:g('f-dept').value,pos:g('f-pos').value,basic:parseFloat(g('f-basic').value)||0,housing:parseFloat(g('f-housing').value)||0,transport:parseFloat(g('f-transport').value)||0,phone:parseFloat(g('f-phone').value)||0,other:parseFloat(g('f-other').value)||0,iban:g('f-iban').value,natId:g('f-natid').value,joinDate:g('f-join').value,status:g('f-status').value};
-  if(!data.name){showAlert('يرجى إدخال اسم الموظف','danger');return;}
-  closeModal();showLoading(true);
-  if(id){
-    const i=DB.employees.findIndex(e=>e.id===id);
-    if(i>=0){DB.employees[i]={...DB.employees[i],...data}; await syncRecord('employees',DB.employees[i],'upsert'); showAlert('تم تحديث الموظف');}
-  } else {
-    data.id=DB.nextId.emp++;
-    DB.employees.push(data);
-    await syncRecord('employees',data,'upsert');
-    showAlert('تم إضافة الموظف');
-  }
-  showLoading(false);showView('employees');
-}
-async function deleteEmployee(id){
-  if(!confirm('هل أنت متأكد من حذف هذا الموظف؟'))return;
-  showLoading(true);
-  DB.employees=DB.employees.filter(e=>e.id!==id);
-  await syncRecord('employees',{id},'delete');
-  showLoading(false);showAlert('تم حذف الموظف');showView('employees');
-}
-
-// ===================== SALARIES =====================
-function renderSalaries(c){
-  const month=currentMonth();
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-cash"></i> إدارة الرواتب</div>
-    <div style="display:flex;gap:8px">
-      <input type="month" id="salary-month" value="${month}" onchange="renderSalaryTable()">
-      <button class="btn success" onclick="showAlert('تم تشغيل مسير الرواتب بنجاح')"><i class="ti ti-player-play"></i> تشغيل مسير الرواتب</button>
-    </div></div>
-  <div id="salary-table-area"></div>`;
-  renderSalaryTable();
-}
-function renderSalaryTable(){
-  const month=(document.getElementById('salary-month')||{value:currentMonth()}).value;
-  const area=document.getElementById('salary-table-area');if(!area)return;
-  const totals=DB.employees.reduce((acc,emp)=>{const p=calcPayroll(emp,month);acc.gross+=p.total;acc.ded+=p.totalDed;acc.net+=p.net;return acc;},{gross:0,ded:0,net:0});
-  area.innerHTML=`
-  <div class="summary-cards">
-    <div class="sc"><div class="sc-val">${fmtMoney(totals.gross)}</div><div class="sc-lbl">إجمالي الرواتب</div></div>
-    <div class="sc"><div class="sc-val" style="color:var(--ce)">${fmtMoney(totals.ded)}</div><div class="sc-lbl">إجمالي الخصومات</div></div>
-    <div class="sc"><div class="sc-val" style="color:var(--cs)">${fmtMoney(totals.net)}</div><div class="sc-lbl">صافي المدفوع</div></div>
-  </div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>الموظف</th><th>الأساسي</th><th>البدلات</th><th>إجمالي</th><th>التأمينات</th><th>سلف</th><th>خصومات</th><th>حوافز</th><th>الصافي</th><th></th></tr></thead>
-    <tbody>${DB.employees.map(emp=>{
-      const p=calcPayroll(emp,month);
-      const allowances=(emp.housing||0)+(emp.transport||0)+(emp.phone||0)+(emp.other||0);
-      return `<tr><td><b>${emp.name}</b></td><td>${fmtMoney(emp.basic)}</td><td>${fmtMoney(allowances)}</td><td>${fmtMoney(p.total)}</td>
-        <td style="color:var(--ce)">${fmtMoney(p.gosi)}</td><td style="color:var(--cw)">${fmtMoney(p.loans)}</td><td style="color:var(--ce)">${fmtMoney(p.deds)}</td>
-        <td style="color:var(--cs)">${fmtMoney(p.bons)}</td><td><b style="color:var(--cs)">${fmtMoney(p.net)}</b></td>
-        <td><button class="btn sm" onclick="openPayslip(${emp.id},'${month}')"><i class="ti ti-file-text"></i></button></td></tr>`;
-    }).join('')||'<tr><td colspan="10" class="empty">لا توجد بيانات</td></tr>'}</tbody>
-  </table></div>`;
-}
-
-// ===================== LOANS =====================
-function renderLoans(c){
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-credit-card"></i> السلف والقروض</div>
-    <button class="btn primary" onclick="openAddLoan()"><i class="ti ti-plus"></i> إضافة</button></div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>الموظف</th><th>النوع</th><th>الأصلي</th><th>المتبقي</th><th>القسط</th><th>التاريخ</th><th>السبب</th><th>الحالة</th><th>إجراءات</th></tr></thead>
-    <tbody>${DB.loans.map(l=>{
-      const emp=getEmp(l.empId);
-      const pct=l.amount>0?Math.round(((l.amount-l.remaining)/l.amount)*100):100;
-      return `<tr><td>${emp?emp.name:'—'}</td>
-        <td><span class="badge ${l.type==='سلفة'?'leave':'pending'}">${l.type}</span></td>
-        <td>${fmtMoney(l.amount)}</td>
-        <td><div style="display:flex;align-items:center;gap:8px">${fmtMoney(l.remaining)}<div class="progress-bar" style="width:70px"><div class="progress-fill" style="width:${pct}%;background:${l.status==='completed'?'var(--cs)':'var(--cw)'}"></div></div></div></td>
-        <td>${fmtMoney(l.monthly)}</td><td>${l.date||''}</td><td>${l.reason||''}</td>
-        <td><span class="badge ${l.status==='active'?'active':'inactive'}">${l.status==='active'?'نشط':'منتهي'}</span></td>
-        <td><div class="actions-row">
-          <button class="btn sm" onclick="openEditLoan(${l.id})"><i class="ti ti-edit"></i></button>
-          <button class="btn sm success" onclick="payLoanInstallment(${l.id})"><i class="ti ti-check"></i></button>
-          <button class="btn sm danger" onclick="deleteLoan(${l.id})"><i class="ti ti-trash"></i></button>
-        </div></td></tr>`;
-    }).join('')||'<tr><td colspan="9" class="empty">لا توجد سلف</td></tr>'}</tbody>
-  </table></div>`;
-}
-function openAddLoan(){showModal('إضافة سلفة / قرض',loanFormHTML(null),()=>saveLoan(null));}
-function openEditLoan(id){showModal('تعديل',loanFormHTML(DB.loans.find(x=>x.id===id)),()=>saveLoan(id));}
-function loanFormHTML(l){
-  const v=l||{empId:'',type:'سلفة',amount:'',remaining:'',monthly:'',date:'',reason:'',status:'active'};
-  return `<div class="form-grid">
-    <div class="form-group"><label>الموظف</label><select id="f-emp">${DB.employees.map(e=>`<option value="${e.id}" ${v.empId===e.id?'selected':''}>${e.name}</option>`).join('')}</select></div>
-    <div class="form-group"><label>النوع</label><select id="f-ltype"><option ${v.type==='سلفة'?'selected':''}>سلفة</option><option ${v.type==='قرض'?'selected':''}>قرض</option></select></div>
-    <div class="form-group"><label>المبلغ الأصلي</label><input id="f-amount" type="number" value="${v.amount}"></div>
-    <div class="form-group"><label>المبلغ المتبقي</label><input id="f-remaining" type="number" value="${v.remaining}"></div>
-    <div class="form-group"><label>القسط الشهري</label><input id="f-monthly" type="number" value="${v.monthly}"></div>
-    <div class="form-group"><label>التاريخ</label><input id="f-date" type="date" value="${v.date||''}"></div>
-    <div class="form-group" style="grid-column:1/-1"><label>السبب</label><textarea id="f-reason">${v.reason||''}</textarea></div>
-    <div class="form-group"><label>الحالة</label><select id="f-lstatus"><option value="active" ${v.status==='active'?'selected':''}>نشط</option><option value="completed" ${v.status==='completed'?'selected':''}>منتهي</option></select></div>
-  </div>`;
-}
-async function saveLoan(id){
-  const g=x=>(document.getElementById(x)||{value:''});
-  const data={empId:parseInt(g('f-emp').value),type:g('f-ltype').value,amount:parseFloat(g('f-amount').value)||0,remaining:parseFloat(g('f-remaining').value)||0,monthly:parseFloat(g('f-monthly').value)||0,date:g('f-date').value,reason:g('f-reason').value,status:g('f-lstatus').value};
-  closeModal();showLoading(true);
-  if(id){const i=DB.loans.findIndex(l=>l.id===id);if(i>=0){DB.loans[i]={...DB.loans[i],...data};await syncRecord('loans',DB.loans[i],'upsert');showAlert('تم التعديل');}}
-  else{data.id=DB.nextId.loan++;DB.loans.push(data);await syncRecord('loans',data,'upsert');showAlert('تم الإضافة');}
-  showLoading(false);showView('loans');
-}
-async function payLoanInstallment(id){
-  const l=DB.loans.find(x=>x.id===id);if(!l||l.status==='completed')return;
-  showLoading(true);
-  l.remaining=Math.max(0,l.remaining-l.monthly);
-  if(l.remaining===0)l.status='completed';
-  await syncRecord('loans',l,'upsert');
-  showLoading(false);
-  showAlert(`تم خصم ${fmtMoney(l.monthly)} - المتبقي: ${fmtMoney(l.remaining)}`);
-  showView('loans');
-}
-async function deleteLoan(id){
-  if(!confirm('حذف؟'))return;
-  showLoading(true);
-  DB.loans=DB.loans.filter(l=>l.id!==id);
-  await syncRecord('loans',{id},'delete');
-  showLoading(false);showAlert('تم الحذف');showView('loans');
-}
-
-// ===================== DEDUCTIONS =====================
-function renderDeductions(c){
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-minus-vertical"></i> الخصومات</div>
-    <button class="btn primary" onclick="openAddDeduction()"><i class="ti ti-plus"></i> إضافة</button></div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>الموظف</th><th>نوع الخصم</th><th>المبلغ</th><th>الشهر</th><th>البيان</th><th>الحالة</th><th>إجراءات</th></tr></thead>
-    <tbody>${DB.deductions.map(d=>{
-      const emp=getEmp(d.empId);
-      return `<tr><td>${emp?emp.name:'—'}</td>
-        <td><span class="badge ${d.type==='غياب'?'inactive':d.type==='تأخير'?'leave':'pending'}">${d.type}</span></td>
-        <td style="color:var(--ce)">${fmtMoney(d.amount)}</td>
-        <td>${d.month?formatMonth(d.month):''}</td><td>${d.desc||''}</td>
-        <td><span class="badge ${d.status==='applied'?'active':'pending'}">${d.status==='applied'?'مطبق':'معلق'}</span></td>
-        <td><div class="actions-row">
-          <button class="btn sm" onclick="openEditDed(${d.id})"><i class="ti ti-edit"></i></button>
-          <button class="btn sm danger" onclick="deleteDed(${d.id})"><i class="ti ti-trash"></i></button>
-        </div></td></tr>`;
-    }).join('')||'<tr><td colspan="7" class="empty">لا توجد خصومات</td></tr>'}</tbody>
-  </table></div>`;
-}
-function openAddDeduction(){showModal('إضافة خصم',dedFormHTML(null),()=>saveDed(null));}
-function openEditDed(id){showModal('تعديل الخصم',dedFormHTML(DB.deductions.find(x=>x.id===id)),()=>saveDed(id));}
-function dedFormHTML(d){
-  const v=d||{empId:'',type:'غياب',amount:'',month:currentMonth(),desc:'',status:'pending'};
-  return `<div class="form-grid">
-    <div class="form-group"><label>الموظف</label><select id="f-emp">${DB.employees.map(e=>`<option value="${e.id}" ${v.empId===e.id?'selected':''}>${e.name}</option>`).join('')}</select></div>
-    <div class="form-group"><label>نوع الخصم</label><select id="f-dtype">${['غياب','تأخير','مخالفة','كسر/تلف','أخرى'].map(t=>`<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
-    <div class="form-group"><label>المبلغ</label><input id="f-amount" type="number" value="${v.amount}"></div>
-    <div class="form-group"><label>الشهر</label><input id="f-month" type="month" value="${v.month||currentMonth()}"></div>
-    <div class="form-group" style="grid-column:1/-1"><label>البيان</label><textarea id="f-desc">${v.desc||''}</textarea></div>
-    <div class="form-group"><label>الحالة</label><select id="f-dstatus">
-      <option value="pending" ${v.status==='pending'?'selected':''}>معلق</option>
-      <option value="applied" ${v.status==='applied'?'selected':''}>مطبق</option>
-      <option value="cancelled" ${v.status==='cancelled'?'selected':''}>ملغي</option>
-    </select></div>
-  </div>`;
-}
-async function saveDed(id){
-  const g=x=>(document.getElementById(x)||{value:''});
-  const data={empId:parseInt(g('f-emp').value),type:g('f-dtype').value,amount:parseFloat(g('f-amount').value)||0,month:g('f-month').value,desc:g('f-desc').value,status:g('f-dstatus').value};
-  closeModal();showLoading(true);
-  if(id){const i=DB.deductions.findIndex(d=>d.id===id);if(i>=0){DB.deductions[i]={...DB.deductions[i],...data};await syncRecord('deductions',DB.deductions[i],'upsert');showAlert('تم التعديل');}}
-  else{data.id=DB.nextId.ded++;DB.deductions.push(data);await syncRecord('deductions',data,'upsert');showAlert('تم الإضافة');}
-  showLoading(false);showView('deductions');
-}
-async function deleteDed(id){
-  if(!confirm('حذف؟'))return;showLoading(true);
-  DB.deductions=DB.deductions.filter(d=>d.id!==id);
-  await syncRecord('deductions',{id},'delete');
-  showLoading(false);showAlert('تم الحذف');showView('deductions');
-}
-
-// ===================== ARREARS =====================
-function renderArrears(c){
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-clock"></i> المتأخرات</div>
-    <button class="btn primary" onclick="openAddArrear()"><i class="ti ti-plus"></i> إضافة</button></div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>الأشهر</th><th>التاريخ</th><th>البيان</th><th>الحالة</th><th>إجراءات</th></tr></thead>
-    <tbody>${DB.arrears.map(a=>{
-      const emp=getEmp(a.empId);
-      return `<tr><td>${emp?emp.name:'—'}</td><td>${a.type}</td>
-        <td style="color:var(--cp)">${fmtMoney(a.amount)}</td>
-        <td>${a.months}</td><td>${a.date||''}</td><td>${a.desc||''}</td>
-        <td><span class="badge ${a.status==='paid'?'active':'pending'}">${a.status==='paid'?'مسدد':'معلق'}</span></td>
-        <td><div class="actions-row">
-          ${a.status==='pending'?`<button class="btn sm success" onclick="payArrear(${a.id})"><i class="ti ti-check"></i> سدد</button>`:''}
-          <button class="btn sm danger" onclick="deleteArrear(${a.id})"><i class="ti ti-trash"></i></button>
-        </div></td></tr>`;
-    }).join('')||'<tr><td colspan="8" class="empty">لا توجد متأخرات</td></tr>'}</tbody>
-  </table></div>`;
-}
-function openAddArrear(){showModal('إضافة متأخر',arrearFormHTML(null),()=>saveArrear(null));}
-function arrearFormHTML(a){
-  const v=a||{empId:'',type:'راتب',amount:'',months:'',date:'',desc:''};
-  return `<div class="form-grid">
-    <div class="form-group"><label>الموظف</label><select id="f-emp">${DB.employees.map(e=>`<option value="${e.id}" ${v.empId===e.id?'selected':''}>${e.name}</option>`).join('')}</select></div>
-    <div class="form-group"><label>النوع</label><select id="f-atype">${['راتب','بدل سكن','بدل نقل','مكافأة','أخرى'].map(t=>`<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
-    <div class="form-group"><label>المبلغ</label><input id="f-amount" type="number" value="${v.amount}"></div>
-    <div class="form-group"><label>عدد الأشهر</label><input id="f-months" type="number" value="${v.months}"></div>
-    <div class="form-group"><label>التاريخ</label><input id="f-date" type="date" value="${v.date||''}"></div>
-    <div class="form-group" style="grid-column:1/-1"><label>البيان</label><textarea id="f-adesc">${v.desc||''}</textarea></div>
-  </div>`;
-}
-async function saveArrear(id){
-  const g=x=>(document.getElementById(x)||{value:''});
-  const data={empId:parseInt(g('f-emp').value),type:g('f-atype').value,amount:parseFloat(g('f-amount').value)||0,months:parseInt(g('f-months').value)||1,date:g('f-date').value,desc:g('f-adesc').value,status:'pending'};
-  closeModal();showLoading(true);
-  if(id){const i=DB.arrears.findIndex(a=>a.id===id);if(i>=0){DB.arrears[i]={...DB.arrears[i],...data};await syncRecord('arrears',DB.arrears[i],'upsert');showAlert('تم التعديل');}}
-  else{data.id=DB.nextId.arr++;DB.arrears.push(data);await syncRecord('arrears',data,'upsert');showAlert('تم الإضافة');}
-  showLoading(false);showView('arrears');
-}
-async function payArrear(id){
-  const a=DB.arrears.find(x=>x.id===id);if(!a)return;
-  showLoading(true);a.status='paid';
-  await syncRecord('arrears',a,'upsert');
-  showLoading(false);showAlert('تم تسديد المتأخر');showView('arrears');
-}
-async function deleteArrear(id){
-  if(!confirm('حذف؟'))return;showLoading(true);
-  DB.arrears=DB.arrears.filter(a=>a.id!==id);
-  await syncRecord('arrears',{id},'delete');
-  showLoading(false);showAlert('تم الحذف');showView('arrears');
-}
-
-// ===================== BONUSES =====================
-function renderBonuses(c){
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-star"></i> الحوافز والمكافآت</div>
-    <button class="btn primary" onclick="openAddBonus()"><i class="ti ti-plus"></i> إضافة</button></div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>الشهر</th><th>البيان</th><th>الحالة</th><th>إجراءات</th></tr></thead>
-    <tbody>${DB.bonuses.map(b=>{
-      const emp=getEmp(b.empId);
-      return `<tr><td>${emp?emp.name:'—'}</td>
-        <td><span class="badge ${b.type==='كفاءة'?'active':b.type==='إنجاز'?'leave':'pending'}">${b.type}</span></td>
-        <td style="color:var(--cs)">${fmtMoney(b.amount)}</td>
-        <td>${b.month?formatMonth(b.month):''}</td><td>${b.desc||''}</td>
-        <td><span class="badge ${b.status==='approved'?'active':'pending'}">${b.status==='approved'?'معتمد':'معلق'}</span></td>
-        <td><div class="actions-row">
-          ${b.status==='pending'?`<button class="btn sm success" onclick="approveBonus(${b.id})"><i class="ti ti-check"></i> اعتماد</button>`:''}
-          <button class="btn sm danger" onclick="deleteBonus(${b.id})"><i class="ti ti-trash"></i></button>
-        </div></td></tr>`;
-    }).join('')||'<tr><td colspan="7" class="empty">لا توجد حوافز</td></tr>'}</tbody>
-  </table></div>`;
-}
-function openAddBonus(){showModal('إضافة حافز',bonusFormHTML(null),()=>saveBonus(null));}
-function bonusFormHTML(b){
-  const v=b||{empId:'',type:'كفاءة',amount:'',month:currentMonth(),desc:''};
-  return `<div class="form-grid">
-    <div class="form-group"><label>الموظف</label><select id="f-emp">${DB.employees.map(e=>`<option value="${e.id}" ${v.empId===e.id?'selected':''}>${e.name}</option>`).join('')}</select></div>
-    <div class="form-group"><label>نوع الحافز</label><select id="f-btype">${['كفاءة','إنجاز','سنوي','حضور','مبيعات','أخرى'].map(t=>`<option ${v.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
-    <div class="form-group"><label>المبلغ</label><input id="f-amount" type="number" value="${v.amount}"></div>
-    <div class="form-group"><label>الشهر</label><input id="f-month" type="month" value="${v.month||currentMonth()}"></div>
-    <div class="form-group" style="grid-column:1/-1"><label>البيان</label><textarea id="f-bdesc">${v.desc||''}</textarea></div>
-  </div>`;
-}
-async function saveBonus(id){
-  const g=x=>(document.getElementById(x)||{value:''});
-  const data={empId:parseInt(g('f-emp').value),type:g('f-btype').value,amount:parseFloat(g('f-amount').value)||0,month:g('f-month').value,desc:g('f-bdesc').value,status:'pending'};
-  closeModal();showLoading(true);
-  if(id){const i=DB.bonuses.findIndex(b=>b.id===id);if(i>=0){DB.bonuses[i]={...DB.bonuses[i],...data};await syncRecord('bonuses',DB.bonuses[i],'upsert');showAlert('تم التعديل');}}
-  else{data.id=DB.nextId.bon++;DB.bonuses.push(data);await syncRecord('bonuses',data,'upsert');showAlert('تم الإضافة');}
-  showLoading(false);showView('bonuses');
-}
-async function approveBonus(id){
-  const b=DB.bonuses.find(x=>x.id===id);if(!b)return;
-  showLoading(true);b.status='approved';
-  await syncRecord('bonuses',b,'upsert');
-  showLoading(false);showAlert('تم اعتماد الحافز');showView('bonuses');
-}
-async function deleteBonus(id){
-  if(!confirm('حذف؟'))return;showLoading(true);
-  DB.bonuses=DB.bonuses.filter(b=>b.id!==id);
-  await syncRecord('bonuses',{id},'delete');
-  showLoading(false);showAlert('تم الحذف');showView('bonuses');
-}
-
-// ===================== ATTENDANCE =====================
-function renderAttendance(c){
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-calendar-check"></i> الحضور والإجازات</div>
-    <button class="btn primary" onclick="openAddAttendance()"><i class="ti ti-plus"></i> إضافة سجل</button></div>
-  <div class="table-wrap"><table>
-    <thead><tr><th>الموظف</th><th>الشهر</th><th>حضور</th><th>غياب</th><th>تأخير</th><th>إجازات</th><th>نسبة الحضور</th><th>الحالة</th><th>إجراءات</th></tr></thead>
-    <tbody>${DB.attendance.map(a=>{
-      const emp=getEmp(a.empId);
-      const total=a.present+a.absent+a.leaves;
-      const pct=total?Math.round((a.present/total)*100):0;
-      return `<tr><td>${emp?emp.name:'—'}</td><td>${a.month?formatMonth(a.month):''}</td>
-        <td style="color:var(--cs)">${a.present}</td><td style="color:var(--ce)">${a.absent}</td>
-        <td style="color:var(--cw)">${a.late}</td><td style="color:var(--cp)">${a.leaves}</td>
-        <td><div style="display:flex;align-items:center;gap:8px">
-          <div class="progress-bar" style="width:70px"><div class="progress-fill" style="width:${pct}%;background:${pct>=90?'var(--cs)':pct>=75?'var(--cw)':'var(--ce)'}"></div></div>
-          <span style="font-size:12px">${pct}%</span></div></td>
-        <td><span class="badge ${a.approved?'active':'pending'}">${a.approved?'معتمد':'قيد المراجعة'}</span></td>
-        <td><div class="actions-row">
-          ${!a.approved?`<button class="btn sm success" onclick="approveAtt(${a.id})"><i class="ti ti-check"></i></button>`:''}
-          <button class="btn sm" onclick="openEditAtt(${a.id})"><i class="ti ti-edit"></i></button>
-          <button class="btn sm danger" onclick="deleteAtt(${a.id})"><i class="ti ti-trash"></i></button>
-        </div></td></tr>`;
-    }).join('')||'<tr><td colspan="9" class="empty">لا توجد سجلات</td></tr>'}</tbody>
-  </table></div>`;
-}
-function openAddAttendance(){showModal('إضافة سجل حضور',attFormHTML(null),()=>saveAtt(null));}
-function openEditAtt(id){showModal('تعديل سجل الحضور',attFormHTML(DB.attendance.find(x=>x.id===id)),()=>saveAtt(id));}
-function attFormHTML(a){
-  const v=a||{empId:'',month:currentMonth(),present:'',absent:'',late:'',leaves:''};
-  return `<div class="form-grid">
-    <div class="form-group"><label>الموظف</label><select id="f-emp">${DB.employees.map(e=>`<option value="${e.id}" ${v.empId===e.id?'selected':''}>${e.name}</option>`).join('')}</select></div>
-    <div class="form-group"><label>الشهر</label><input id="f-month" type="month" value="${v.month||currentMonth()}"></div>
-    <div class="form-group"><label>أيام الحضور</label><input id="f-present" type="number" value="${v.present}"></div>
-    <div class="form-group"><label>أيام الغياب</label><input id="f-absent" type="number" value="${v.absent}"></div>
-    <div class="form-group"><label>التأخرات (مرات)</label><input id="f-late" type="number" value="${v.late}"></div>
-    <div class="form-group"><label>الإجازات (أيام)</label><input id="f-leaves" type="number" value="${v.leaves}"></div>
-  </div>`;
-}
-async function saveAtt(id){
-  const g=x=>(document.getElementById(x)||{value:''});
-  const data={empId:parseInt(g('f-emp').value),month:g('f-month').value,present:parseInt(g('f-present').value)||0,absent:parseInt(g('f-absent').value)||0,late:parseInt(g('f-late').value)||0,leaves:parseInt(g('f-leaves').value)||0,approved:false};
-  closeModal();showLoading(true);
-  if(id){const i=DB.attendance.findIndex(a=>a.id===id);if(i>=0){DB.attendance[i]={...DB.attendance[i],...data};await syncRecord('attendance',DB.attendance[i],'upsert');showAlert('تم التعديل');}}
-  else{data.id=DB.nextId.att++;DB.attendance.push(data);await syncRecord('attendance',data,'upsert');showAlert('تم الإضافة');}
-  showLoading(false);showView('attendance');
-}
-async function approveAtt(id){
-  const a=DB.attendance.find(x=>x.id===id);if(!a)return;
-  showLoading(true);a.approved=true;
-  await syncRecord('attendance',a,'upsert');
-  showLoading(false);showAlert('تم اعتماد سجل الحضور');showView('attendance');
-}
-async function deleteAtt(id){
-  if(!confirm('حذف؟'))return;showLoading(true);
-  DB.attendance=DB.attendance.filter(a=>a.id!==id);
-  await syncRecord('attendance',{id},'delete');
-  showLoading(false);showAlert('تم الحذف');showView('attendance');
-}
-
-// ===================== REPORTS =====================
-function renderReports(c){
-  const totalPayroll=DB.employees.reduce((s,e)=>s+totalSalary(e),0);
-  const totalGosi=DB.employees.reduce((s,e)=>s+Math.round(e.basic*(DB.settings.gosi||9)/100),0);
-  const totalLoans=DB.loans.filter(l=>l.status==='active').reduce((s,l)=>s+Number(l.remaining),0);
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-report"></i> التقارير والإحصاءات</div></div>
-  <div class="kpi-grid" style="margin-bottom:1.5rem">
-    <div class="kpi cs"><div class="kpi-label">إجمالي الرواتب الشهرية</div><div class="kpi-val">${fmtMoney(totalPayroll)}</div></div>
-    <div class="kpi cw"><div class="kpi-label">التأمينات الاجتماعية</div><div class="kpi-val">${fmtMoney(totalGosi)}</div><div class="kpi-sub">${DB.settings.gosi||9}% من الأساسي</div></div>
-    <div class="kpi ce"><div class="kpi-label">إجمالي السلف القائمة</div><div class="kpi-val">${fmtMoney(totalLoans)}</div></div>
-    <div class="kpi cp"><div class="kpi-label">متأخرات معلقة</div><div class="kpi-val">${fmtMoney(DB.arrears.filter(a=>a.status==='pending').reduce((s,a)=>s+a.amount,0))}</div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-    <div>
-      <div class="section-title" style="margin-bottom:0.75rem"><div class="section-title-left">توزيع الرواتب بالأقسام</div></div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>القسم</th><th>عدد الموظفين</th><th>إجمالي الرواتب</th></tr></thead>
-        <tbody>${Object.entries(DB.employees.reduce((acc,e)=>{if(!acc[e.dept])acc[e.dept]={count:0,total:0};acc[e.dept].count++;acc[e.dept].total+=totalSalary(e);return acc;},{})).map(([dept,d])=>`<tr><td>${dept}</td><td>${d.count}</td><td>${fmtMoney(d.total)}</td></tr>`).join('')||'<tr><td colspan="3" class="empty">لا توجد بيانات</td></tr>'}</tbody>
-      </table></div>
-    </div>
-    <div>
-      <div class="section-title" style="margin-bottom:0.75rem"><div class="section-title-left">ملخص الخصومات</div></div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>النوع</th><th>عدد</th><th>الإجمالي</th></tr></thead>
-        <tbody>${Object.entries(DB.deductions.reduce((acc,d)=>{if(!acc[d.type])acc[d.type]={count:0,total:0};acc[d.type].count++;acc[d.type].total+=Number(d.amount);return acc;},{})).map(([type,d])=>`<tr><td>${type}</td><td>${d.count}</td><td style="color:var(--ce)">${fmtMoney(d.total)}</td></tr>`).join('')||'<tr><td colspan="3" class="empty">لا توجد بيانات</td></tr>'}</tbody>
-      </table></div>
-    </div>
-  </div>
-  <div style="margin-top:1rem">
-    <div class="section-title" style="margin-bottom:0.75rem"><div class="section-title-left">تصدير CSV</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn" onclick="exportCSV('employees')"><i class="ti ti-file-spreadsheet"></i> الموظفين</button>
-      <button class="btn" onclick="exportCSV('payroll')"><i class="ti ti-file-spreadsheet"></i> الرواتب</button>
-      <button class="btn" onclick="exportCSV('loans')"><i class="ti ti-file-spreadsheet"></i> السلف</button>
-    </div>
-  </div>`;
-}
-
-// ===================== PAYSLIPS =====================
-function renderPayslips(c){
-  const month=currentMonth();
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-file-text"></i> قسائم الرواتب</div>
-    <div style="display:flex;gap:8px">
-      <input type="month" id="ps-month" value="${month}" onchange="renderPayslipArea()">
-      <select id="ps-emp" onchange="renderPayslipArea()"><option value="all">كل الموظفين</option>${DB.employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select>
-    </div></div>
-  <div id="payslips-area"></div>`;
-  renderPayslipArea();
-}
-function renderPayslipArea(){
-  const month=(document.getElementById('ps-month')||{value:currentMonth()}).value;
-  const empId=(document.getElementById('ps-emp')||{value:'all'}).value;
-  const area=document.getElementById('payslips-area');if(!area)return;
-  const emps=empId==='all'?DB.employees:DB.employees.filter(e=>e.id===parseInt(empId));
-  if(!emps.length){area.innerHTML='<div class="empty">لا توجد بيانات</div>';return;}
-  area.innerHTML=emps.map(emp=>genPayslipHTML(emp,month)).join('<div style="height:1.5rem"></div>');
-}
-function genPayslipHTML(emp,month){
-  const p=calcPayroll(emp,month);
-  return `<div class="payslip">
-    <div class="payslip-header">
-      <div style="font-size:18px;font-weight:700;color:var(--c1)">${DB.settings.company||'نظام الرواتب'}</div>
-      <div style="font-size:13px;color:var(--txt2);margin-top:4px">قسيمة راتب - ${formatMonth(month)}</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;font-size:13px">
-      <div><span style="color:var(--txt2)">الموظف:</span> ${emp.name}</div>
-      <div><span style="color:var(--txt2)">القسم:</span> ${emp.dept||'—'}</div>
-      <div><span style="color:var(--txt2)">المسمى:</span> ${emp.pos||'—'}</div>
-      <div><span style="color:var(--txt2)">الآيبان:</span> <span style="font-size:11px">${emp.iban||'—'}</span></div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:10px">
-      <div style="font-size:12px;font-weight:500;color:var(--txt2);margin-bottom:6px">المستحقات</div>
-      <div class="payslip-row"><span>الراتب الأساسي</span><span>${fmtMoney(emp.basic)}</span></div>
-      <div class="payslip-row"><span>بدل السكن</span><span>${fmtMoney(emp.housing)}</span></div>
-      <div class="payslip-row"><span>بدل النقل</span><span>${fmtMoney(emp.transport)}</span></div>
-      ${emp.phone?`<div class="payslip-row"><span>بدل الهاتف</span><span>${fmtMoney(emp.phone)}</span></div>`:''}
-      ${emp.other?`<div class="payslip-row"><span>بدلات أخرى</span><span>${fmtMoney(emp.other)}</span></div>`:''}
-      ${p.bons?`<div class="payslip-row" style="color:var(--cs)"><span>حوافز</span><span>+ ${fmtMoney(p.bons)}</span></div>`:''}
-      ${p.arr?`<div class="payslip-row" style="color:var(--cp)"><span>متأخرات</span><span>+ ${fmtMoney(p.arr)}</span></div>`:''}
-      <div class="payslip-row bold"><span>إجمالي المستحقات</span><span>${fmtMoney(p.total+p.bons+p.arr)}</span></div>
-    </div>
-    <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px">
-      <div style="font-size:12px;font-weight:500;color:var(--txt2);margin-bottom:6px">الاستقطاعات</div>
-      <div class="payslip-row" style="color:var(--ce)"><span>التأمينات (${DB.settings.gosi||9}%)</span><span>- ${fmtMoney(p.gosi)}</span></div>
-      ${p.loans?`<div class="payslip-row" style="color:var(--cw)"><span>أقساط السلف</span><span>- ${fmtMoney(p.loans)}</span></div>`:''}
-      ${p.deds?`<div class="payslip-row" style="color:var(--ce)"><span>خصومات أخرى</span><span>- ${fmtMoney(p.deds)}</span></div>`:''}
-      <div class="payslip-row bold"><span>إجمالي الاستقطاعات</span><span>- ${fmtMoney(p.totalDed)}</span></div>
-    </div>
-    <div class="payslip-row total"><span style="font-size:15px">صافي الراتب</span><span style="font-size:18px;font-weight:700">${fmtMoney(p.net)}</span></div>
-  </div>`;
-}
-function openPayslip(empId,month){
-  const emp=getEmp(empId);if(!emp)return;
-  showModal(`قسيمة راتب - ${emp.name}`,genPayslipHTML(emp,month),null,true);
-}
-function viewPayslipForEmp(id){showView('payslips');setTimeout(()=>{const s=document.getElementById('ps-emp');if(s){s.value=id;renderPayslipArea();}},50);}
-
-// ===================== SETTINGS =====================
-function renderSettings(c){
-  c.innerHTML=`
-  <div class="section-title"><div class="section-title-left"><i class="ti ti-adjustments"></i> إعدادات النظام</div></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-    <div>
-      <div class="gs-section">
-        <h4><i class="ti ti-building"></i> معلومات الشركة</h4>
-        <div class="form-grid">
-          <div class="form-group"><label>اسم الشركة</label><input id="s-company" value="${DB.settings.company||''}"></div>
-          <div class="form-group"><label>العملة</label><select id="s-currency">
-            ${['ريال','درهم','دينار','جنيه'].map(c=>`<option ${DB.settings.currency===c?'selected':''}>${c}</option>`).join('')}
-          </select></div>
-          <div class="form-group"><label>نسبة التأمينات (%)</label><input id="s-gosi" type="number" value="${DB.settings.gosi||9}"></div>
-          <div class="form-group"><label>أيام العمل بالشهر</label><input id="s-workdays" type="number" value="${DB.settings.workDays||30}"></div>
-        </div>
-        <button class="btn primary" style="margin-top:1rem" onclick="saveSettings()"><i class="ti ti-check"></i> حفظ الإعدادات</button>
-      </div>
-    </div>
-    <div>
-      <div class="gs-section">
-        <h4><i class="ti ti-brand-google-drive"></i> Google Sheets</h4>
-        <div class="alert success"><i class="ti ti-check"></i> الرابط مدمج تلقائياً في النظام. لا حاجة لأي إعداد إضافي.</div>
-        <div style="font-size:13px;color:var(--txt2);word-break:break-all">${SCRIPT_URL}</div>
-        <button class="btn" style="margin-top:1rem" onclick="loadAllData()"><i class="ti ti-refresh"></i> إعادة تحميل البيانات</button>
-      </div>
-      <div class="gs-section">
-        <h4><i class="ti ti-code"></i> كود Google Apps Script المطلوب</h4>
-        <div style="font-size:12px;color:var(--txt2);margin-bottom:8px">تأكد من نشر هذا الكود في مشروع Apps Script الخاص بك:</div>
-        <div id="gs-code-block" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px;font-family:monospace;font-size:11px;white-space:pre;max-height:220px;overflow:auto;color:var(--txt)">const SHEET_ID = 'YOUR_SHEET_ID_HERE';
-
+// ======================================================
+//  doPost — نقطة الدخول الرئيسية
+// ======================================================
 function doPost(e) {
   try {
-    var body = JSON.parse(e.postData.contents);
-    var action = body.action;
-    var ss = SpreadsheetApp.openById(SHEET_ID);
+    var body    = JSON.parse(e.postData.contents);
+    var action  = body.action;
+    var payload = body.payload || {};
+    var ss      = SpreadsheetApp.openById(SHEET_ID);
 
-    if (action === 'getAll') {
-      var result = {};
-      ['employees','loans','deductions','arrears','bonuses','attendance'].forEach(function(name) {
-        var sh = ss.getSheetByName(name);
-        if (!sh) { result[name] = []; return; }
-        var rows = sh.getDataRange().getValues();
-        if (rows.length < 2) { result[name] = []; return; }
-        var headers = rows[0];
-        result[name] = rows.slice(1).map(function(row) {
-          var obj = {};
-          headers.forEach(function(h, i) { obj[h] = row[i]; });
-          return obj;
+    // تهيئة الأوراق إن لم تكن موجودة
+    initSheets(ss);
+
+    switch (action) {
+
+      // --------------------------------------------------
+      //  getAll — تحميل جميع البيانات دفعةً واحدة
+      // --------------------------------------------------
+      case 'getAll': {
+        var result = {};
+
+        ['employees','loans','deductions','arrears','bonuses','attendance'].forEach(function(name) {
+          var sh   = ss.getSheetByName(name);
+          var last = sh.getLastRow();
+          if (!sh || last < 2) { result[name] = []; return; }
+
+          var rows    = sh.getRange(1, 1, last, sh.getLastColumn()).getValues();
+          var headers = rows[0];
+
+          result[name] = rows.slice(1)
+            .filter(function(row) { return row[0] !== '' && row[0] !== null; })
+            .map(function(row) {
+              var obj = {};
+              headers.forEach(function(h, i) {
+                obj[h] = (row[i] === null || row[i] === undefined) ? '' : row[i];
+              });
+              return obj;
+            });
         });
-      });
-      // load settings
-      var settingsSh = ss.getSheetByName('settings');
-      if (settingsSh) {
-        var sRows = settingsSh.getDataRange().getValues();
-        var settings = {};
-        sRows.forEach(function(r) { if(r[0]) settings[r[0]] = r[1]; });
-        result.settings = settings;
+
+        // تحميل الإعدادات
+        var settingsSh = ss.getSheetByName('settings');
+        if (settingsSh && settingsSh.getLastRow() > 0) {
+          var sRows    = settingsSh.getDataRange().getValues();
+          var settings = {};
+          sRows.forEach(function(r) { if (r[0]) settings[String(r[0])] = r[1]; });
+          result.settings = settings;
+        }
+
+        return jsonOut({ success: true, data: result });
       }
-      return json({success:true, data:result});
-    }
 
-    if (action === 'syncRecord') {
-      var sheet = body.payload.sheet;
-      var record = body.payload.record;
-      var operation = body.payload.operation;
-      var sh = ss.getSheetByName(sheet) || ss.insertSheet(sheet);
-      var rows = sh.getDataRange().getValues();
+      // --------------------------------------------------
+      //  syncRecord — إضافة / تعديل / حذف سجل واحد
+      // --------------------------------------------------
+      case 'syncRecord': {
+        var sheetName = payload.sheet;
+        var record    = payload.record;
+        var operation = payload.operation; // 'upsert' | 'delete'
 
-      if (operation === 'delete') {
-        for (var r = 1; r < rows.length; r++) {
-          if (String(rows[r][0]) === String(record.id)) {
-            sh.deleteRow(r + 1); break;
+        if (!sheetName || !record) {
+          return jsonOut({ success: false, error: 'Missing sheet or record' });
+        }
+
+        var sh = ss.getSheetByName(sheetName);
+        if (!sh) sh = ss.insertSheet(sheetName);
+
+        var lastRow = sh.getLastRow();
+        var lastCol = sh.getLastColumn();
+
+        // ---- حذف ----
+        if (operation === 'delete') {
+          if (lastRow < 2) return jsonOut({ success: true });
+          var ids = sh.getRange(2, 1, lastRow - 1, 1).getValues();
+          for (var r = 0; r < ids.length; r++) {
+            if (String(ids[r][0]) === String(record.id)) {
+              sh.deleteRow(r + 2);
+              return jsonOut({ success: true });
+            }
+          }
+          return jsonOut({ success: true }); // لم يُعثر عليه — لا بأس
+        }
+
+        // ---- upsert ----
+        var headers;
+        if (lastRow === 0 || lastCol === 0) {
+          // الورقة فارغة — أنشئ الترويسات
+          headers = Object.keys(record);
+          sh.appendRow(headers);
+          lastRow = 1;
+        } else {
+          headers = sh.getRange(1, 1, 1, lastCol).getValues()[0];
+        }
+
+        var values = headers.map(function(h) {
+          return record[h] !== undefined ? record[h] : '';
+        });
+
+        // هل السجل موجود بالفعل؟
+        if (lastRow > 1) {
+          var existingIds = sh.getRange(2, 1, lastRow - 1, 1).getValues();
+          for (var r = 0; r < existingIds.length; r++) {
+            if (String(existingIds[r][0]) === String(record.id)) {
+              sh.getRange(r + 2, 1, 1, values.length).setValues([values]);
+              return jsonOut({ success: true });
+            }
           }
         }
-        return json({success:true});
+
+        // سجل جديد
+        sh.appendRow(values);
+        return jsonOut({ success: true });
       }
 
-      // upsert
-      var headers = rows.length ? rows[0] : Object.keys(record);
-      if (!rows.length) {
-        sh.appendRow(headers);
-        rows = [headers];
+      // --------------------------------------------------
+      //  saveSettings — حفظ إعدادات النظام
+      // --------------------------------------------------
+      case 'saveSettings': {
+        var sh = ss.getSheetByName('settings');
+        if (!sh) sh = ss.insertSheet('settings');
+        sh.clearContents();
+        Object.keys(payload).forEach(function(key) {
+          sh.appendRow([key, payload[key]]);
+        });
+        return jsonOut({ success: true });
       }
-      var values = headers.map(function(h) { return record[h] !== undefined ? record[h] : ''; });
-      for (var r = 1; r < rows.length; r++) {
-        if (String(rows[r][0]) === String(record.id)) {
-          sh.getRange(r + 1, 1, 1, values.length).setValues([values]);
-          return json({success:true});
-        }
-      }
-      sh.appendRow(values);
-      return json({success:true});
+
+      default:
+        return jsonOut({ success: false, error: 'Unknown action: ' + action });
     }
 
-    if (action === 'saveSettings') {
-      var sh = ss.getSheetByName('settings') || ss.insertSheet('settings');
-      sh.clearContents();
-      Object.entries(body.payload).forEach(function(pair) {
-        sh.appendRow(pair);
-      });
-      return json({success:true});
-    }
-
-    return json({success:false, error:'Unknown action'});
-  } catch(err) {
-    return json({success:false, error:err.toString()});
+  } catch (err) {
+    console.error(err);
+    return jsonOut({ success: false, error: err.toString() });
   }
 }
 
-function json(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
+// ======================================================
+//  doGet — للتحقق من أن التطبيق يعمل (اختياري)
+// ======================================================
 function doGet(e) {
-  return json({status:'ok'});
-}</div>
-        <button class="btn sm" style="margin-top:8px" onclick="copyScript()"><i class="ti ti-copy"></i> نسخ الكود</button>
-      </div>
-    </div>
-  </div>`;
-}
-async function saveSettings(){
-  DB.settings.company=document.getElementById('s-company').value||DB.settings.company;
-  DB.settings.currency=document.getElementById('s-currency').value;
-  DB.settings.gosi=parseFloat(document.getElementById('s-gosi').value)||9;
-  DB.settings.workDays=parseInt(document.getElementById('s-workdays').value)||30;
-  document.getElementById('company-name-header').textContent=DB.settings.company;
-  showLoading(true);
-  await gsCall('saveSettings',{...DB.settings});
-  showLoading(false);
-  showAlert('تم حفظ الإعدادات');
-}
-function copyScript(){
-  const code=document.getElementById('gs-code-block');
-  if(code)navigator.clipboard.writeText(code.textContent).then(()=>showAlert('تم نسخ الكود'));
-}
-function exportCSV(type){
-  const data={
-    employees:DB.employees.map(e=>({...e,total:totalSalary(e)})),
-    payroll:DB.employees.map(e=>{const p=calcPayroll(e,currentMonth());return{name:e.name,dept:e.dept,gross:p.total,deductions:p.totalDed,bonuses:p.bons,net:p.net};}),
-    loans:DB.loans.map(l=>{const e=getEmp(l.empId);return{...l,empName:e?e.name:''};})
-  }[type]||[];
-  if(!data.length)return;
-  const headers=Object.keys(data[0]);
-  const csv=[headers.join(','),...data.map(r=>headers.map(h=>'"'+(r[h]||'')+'"').join(','))].join('\n');
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download=`${type}.csv`;a.click();
-  URL.revokeObjectURL(url);
-  showAlert('تم تصدير '+type+'.csv');
+  return jsonOut({ status: 'ok', message: 'نظام الرواتب — Web App يعمل بنجاح' });
 }
 
-// ===================== MODAL =====================
-function showModal(title,bodyHTML,onSave,noSave=false){
-  closeModal();
-  const bg=document.createElement('div');
-  bg.className='modal-bg';bg.id='modal-container';
-  const m=document.createElement('div');m.className='modal';
-  m.innerHTML=`
-    <div class="modal-header">
-      <h3>${title}</h3>
-      <button class="btn sm" onclick="closeModal()"><i class="ti ti-x"></i></button>
-    </div>
-    <div>${bodyHTML}</div>
-    ${!noSave&&onSave?`<div class="modal-footer">
-      <button class="btn" onclick="closeModal()">إلغاء</button>
-      <button class="btn primary" id="modal-save-btn"><i class="ti ti-check"></i> حفظ</button>
-    </div>`:''}`;
-  bg.appendChild(m);
-  document.body.appendChild(bg);
-  if(!noSave&&onSave) document.getElementById('modal-save-btn').onclick=onSave;
-  bg.onclick=e=>{if(e.target===bg)closeModal();};
-}
-function closeModal(){
-  const m=document.getElementById('modal-container');if(m)m.remove();
+// ======================================================
+//  مساعد: إنشاء رد JSON
+// ======================================================
+function jsonOut(obj) {
+  var output = ContentService.createTextOutput(JSON.stringify(obj));
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
 }
 
-// ===================== INIT =====================
-loadAllData();
-</script>
-</body>
-</html>
+// ======================================================
+//  مساعد: تهيئة الأوراق بالترويسات المطلوبة
+//  يُنفَّذ تلقائياً عند أول استدعاء — آمن للتكرار
+// ======================================================
+function initSheets(ss) {
+  var schemas = {
+    employees:   ['id','name','natId','dept','pos','basic','housing','transport','phone','other','iban','joinDate','status'],
+    loans:       ['id','empId','type','amount','remaining','monthly','date','reason','status'],
+    deductions:  ['id','empId','type','amount','month','desc','status'],
+    arrears:     ['id','empId','type','amount','months','date','desc','status'],
+    bonuses:     ['id','empId','type','amount','month','desc','status'],
+    attendance:  ['id','empId','month','present','absent','late','leaves','approved'],
+    settings:    ['key','value']
+  };
+
+  Object.keys(schemas).forEach(function(name) {
+    var sh = ss.getSheetByName(name);
+    if (!sh) {
+      sh = ss.insertSheet(name);
+      sh.appendRow(schemas[name]);
+      // تنسيق الترويسة
+      sh.getRange(1, 1, 1, schemas[name].length)
+        .setBackground('#0f2942')
+        .setFontColor('#ffffff')
+        .setFontWeight('bold');
+    }
+  });
+}
+
+// ======================================================
+//  دالة مساعدة: تشغيلها مرة واحدة يدوياً من المحرر
+//  لتهيئة جدول البيانات قبل البدء
+// ======================================================
+function setupSpreadsheet() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  initSheets(ss);
+  // إضافة إعدادات افتراضية
+  var settingsSh = ss.getSheetByName('settings');
+  if (settingsSh.getLastRow() < 2) {
+    var defaults = [
+      ['company', 'نظام الرواتب'],
+      ['currency', 'ريال'],
+      ['gosi', 9],
+      ['workDays', 30]
+    ];
+    defaults.forEach(function(row) { settingsSh.appendRow(row); });
+  }
+  SpreadsheetApp.getUi().alert('✅ تم إعداد جدول البيانات بنجاح!');
+}
