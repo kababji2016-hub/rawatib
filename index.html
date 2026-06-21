@@ -395,19 +395,30 @@ input[type="month"].month-styled:focus {
 
   <!-- ===== Reports ===== -->
   <div id="reports" class="section">
-    <div class="page-header">
-      <h4><i class="fas fa-chart-bar me-2"></i>التقارير</h4>
-      <div class="d-flex gap-2 flex-wrap no-print">
-        <select class="form-select form-select-sm" style="max-width:220px" id="rptType">
-          <option value="payroll">مسيّر الرواتب الشهري</option>
-          <option value="dept">ملخص حسب الفرع</option>
-          <option value="loans">كشف القروض والسلف</option>
-          <option value="deductions">كشف الخصومات</option>
-        </select>
-        <input type="month" id="rptMonth" class="form-control form-control-sm" style="max-width:160px">
-        <button class="btn btn-primary btn-sm" onclick="genReport()"><i class="fas fa-chart-bar me-1"></i>عرض</button>
-        <button class="btn btn-outline-success btn-sm" onclick="exportRptCSV()"><i class="fas fa-file-excel me-1"></i>Excel</button>
-        <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>طباعة</button>
+    <div class="page-header" style="flex-direction:column;align-items:flex-start;gap:.7rem">
+      <div class="d-flex justify-content-between w-100 align-items-center flex-wrap gap-2">
+        <h4 class="mb-0"><i class="fas fa-chart-bar me-2"></i>التقارير</h4>
+        <div class="d-flex gap-2 flex-wrap no-print align-items-center">
+          <select class="form-select form-select-sm" style="max-width:225px" id="rptType">
+            <option value="payroll">مسيّر الرواتب الشهري</option>
+            <option value="dept">ملخص حسب الفرع</option>
+            <option value="loans">كشف القروض والسلف</option>
+            <option value="deductions">كشف الخصومات</option>
+          </select>
+          <input type="month" id="rptMonth" class="month-styled">
+          <button class="btn btn-calc btn-sm" onclick="genReport()"><i class="fas fa-chart-bar me-1"></i>عرض</button>
+          <button class="btn btn-excel btn-sm" onclick="exportRptCSV()"><i class="fas fa-file-excel me-1"></i>Excel</button>
+          <button class="btn btn-print btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>طباعة</button>
+        </div>
+      </div>
+      <!-- Filter bar for reports -->
+      <div class="d-flex gap-2 flex-wrap no-print align-items-center w-100" id="rptFilterBar" style="display:none!important">
+        <i class="fas fa-filter" style="color:var(--text3)"></i>
+        <input type="text" class="form-control form-control-sm" style="max-width:210px"
+               id="rptEmpSearch" placeholder="بحث باسم الموظف..." oninput="filterRptTable()">
+        <select class="form-select form-select-sm" style="max-width:175px"
+                id="rptDeptFilter" onchange="filterRptTable()"><option value="">كل الفروع</option></select>
+        <small style="color:var(--text3)" id="rptVisibleCount"></small>
       </div>
     </div>
     <div id="rptResult" class="card-box">
