@@ -332,7 +332,6 @@ function setupSpreadsheet() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
   var extra = {
     arrears:    ['id','empId','type','amount','months','date','desc','status'],
-    bonuses:    ['id','empId','type','amount','month','desc','status'],
     attendance: ['id','empId','month','present','absent','late','leaves','approved'],
     settings:   ['key','value']
   };
