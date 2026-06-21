@@ -917,24 +917,26 @@ function printAllPayslips() {
     return '<div class="ps-page">'+slots+'</div>';
   }).join('');
 
-  // A4: 297mm tall, @page margin 8mm → usable 281mm
-  // 4 slots × (receipt ~66mm + cut ~4mm) = 280mm ✓
+  // A4 usable: 297mm - 14mm margins = 283mm
+  // 3 cut zones × 22mm (1cm top + 2px line + 1cm bottom) = 66mm
+  // 4 receipts: (283 - 66) / 4 = 54.25mm each — tight but fits 5 content rows
   var css =
-    '@page{size:A4 portrait;margin:8mm}'+
+    '@page{size:A4 portrait;margin:7mm}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
-    'body{font-family:"Cairo",Arial,sans-serif;direction:rtl;background:#fff;color:#000;font-size:11.5px}'+
-    '.ps-page{height:281mm;display:flex;flex-direction:column;page-break-after:always;overflow:hidden}'+
-    '.ps-receipt{flex:1;border:1.5px solid #000;padding:6px 12px 5px;display:flex;flex-direction:column;justify-content:space-between;min-height:0}'+
-    '.ps-co-name{text-align:center;font-size:14.5px;font-weight:700;margin-bottom:1px}'+
-    '.ps-title{text-align:center;font-size:11.5px;margin-bottom:5px}'+
-    '.ps-info{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px}'+
-    '.ps-info-col{display:flex;flex-direction:column;gap:1px}'+
-    'table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:4px}'+
-    'th,td{border:1px solid #000;padding:4px 7px;text-align:center}'+
-    'th{background:#e0e0e0;font-weight:700}td{font-weight:700}'+
-    '.ps-footer{display:flex;justify-content:space-between;font-size:11px}'+
-    '.ps-cut{height:16px;display:flex;align-items:center;gap:5px;color:#444;font-size:14px;padding:0 2px;flex-shrink:0}'+
-    '.ps-cut::after{content:"";flex:1;border-top:1.5px dashed #777}';
+    'body{font-family:"Cairo",Arial,sans-serif;direction:rtl;background:#fff;color:#000;font-size:13px;font-weight:700}'+
+    '.ps-page{height:283mm;display:flex;flex-direction:column;page-break-after:always;overflow:hidden}'+
+    '.ps-receipt{flex:1;border:2px solid #000;padding:7px 14px 6px;display:flex;flex-direction:column;justify-content:space-between;min-height:0}'+
+    '.ps-co-name{text-align:center;font-size:16px;font-weight:900;margin-bottom:2px;letter-spacing:.3px}'+
+    '.ps-title{text-align:center;font-size:13.5px;font-weight:700;margin-bottom:5px}'+
+    '.ps-info{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:4px}'+
+    '.ps-info-col{display:flex;flex-direction:column;gap:2px}'+
+    'table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:4px}'+
+    'th,td{border:1.5px solid #000;padding:5px 8px;text-align:center;font-weight:700}'+
+    'th{background:#d0d0d0;font-size:13.5px}'+
+    '.ps-footer{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700}'+
+    /* 1cm above + line + 1cm below = 22mm total per cut */
+    '.ps-cut{height:22mm;display:flex;align-items:center;gap:6px;color:#333;font-size:16px;flex-shrink:0;padding:0 3px}'+
+    '.ps-cut::after{content:"";flex:1;border-top:2px dashed #666}';
 
   var win = window.open('','_blank');
   win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>قسائم الرواتب</title><style>'+css+'</style></head><body>'+pagesHtml+'</body></html>');
