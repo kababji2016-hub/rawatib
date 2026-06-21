@@ -1086,7 +1086,7 @@ function doSaveSettings(e) {
   e.preventDefault();
   var apiUrl = val('s_apiUrl');
   if (apiUrl) { localStorage.setItem('apiUrl', apiUrl); API = apiUrl; }
-  var payload = { company:val('s_company'), currency:val('s_currency'), gosi:val('s_gosi'), workDays:val('s_workDays') };
+  var payload = { company:val('s_company'), currency:val('s_currency'), workDays:val('s_workDays') };
   callServer('saveSettings', payload, function(res) {
     if (res && res.success) { toast('تم حفظ الإعدادات', 'success'); loadAll(); }
     else toast('خطأ في الحفظ', 'danger');
