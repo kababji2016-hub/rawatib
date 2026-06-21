@@ -684,26 +684,6 @@ function renderDeds(rows) {
   }).join(''));
 }
 
-// ---- Bonuses ----
-function renderBons(rows) {
-  rows = rows || DB.bonuses;
-  document.getElementById('bonCount').textContent = rows.length;
-  tbody('bonTbl', rows.map(function(b, i){
-    var emp = findEmp(b.empId);
-    var empName = emp ? esc(emp.name) : esc(b.empId);
-    var dept = emp ? emp.dept : '';
-    return '<tr>'+
-      '<td>'+(i+1)+'</td>'+
-      '<td class="fw-semibold">'+empName+'</td>'+
-      '<td>'+esc(dept)+'</td>'+
-      '<td>'+esc(b.type)+'</td>'+
-      '<td class="text-success fw-semibold">'+fmt(b.amount)+'</td>'+
-      '<td>'+fmtMonth(b.month)+'</td>'+
-      '<td class="text-muted small">'+esc(b.desc||'—')+'</td>'+
-      '<td class="no-print">'+actionBtns('bon',b.id)+'</td>'+
-    '</tr>';
-  }).join(''));
-}
 
 // ============================================================
 //  Filters
