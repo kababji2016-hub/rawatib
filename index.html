@@ -1227,12 +1227,10 @@ function genReport() {
 
 function showRptFilters(type) {
   var bar = document.getElementById('rptFilterBar');
-  // Populate dept filter from current data
-  var depts = [...new Set(DB.employees.map(function(e){ return e.dept; }).filter(Boolean))].sort();
-  var opt = '<option value="">كل الفروع</option>'+depts.map(function(d){return '<option value="'+esc(d)+'">'+esc(d)+'</option>';}).join('');
-  document.getElementById('rptDeptFilter').innerHTML = opt;
+  bar.style.removeProperty('display');
   bar.style.display = 'flex';
-  updateRptCount();
+  // delay count so DOM settles
+  setTimeout(updateRptCount, 50);
 }
 
 function filterRptTable() {
