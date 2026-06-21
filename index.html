@@ -861,30 +861,31 @@ function calcPayslips() {
 function printAllPayslips() {
   if (!payrollCache.length || !currentPayslipMonth) { toast('احسب القسائم أولاً','warning'); return; }
   var currency = DB.settings.currency||'ريال';
-  var company  = DB.settings.company||'الشركة';
+  var company  = DB.settings.company||'نظام الرواتب';
   var month    = currentPayslipMonth;
   var deptF    = val('psDeptFilter');
   var rows     = deptF ? payrollCache.filter(function(r){ return r.dept===deptF; }) : payrollCache;
 
-  var allHtml = rows.map(function(r){ return buildPayslipHTML(r, month, currency, company); }).join('<div style="page-break-after:always;"></div>');
+  var cutLine  = '<div class="ps-cut">&#9986;</div>';
+  var allHtml  = rows.map(function(r){ return buildReceiptHTML(r, month, currency, company); }).join(cutLine);
+
+  var css =
+    '*{box-sizing:border-box;margin:0;padding:0}'+
+    'body{font-family:"Cairo",Arial,sans-serif;direction:rtl;background:#fff;color:#000;font-size:13px;padding:10px}'+
+    '.ps-receipt{border:2px solid #000;padding:10px 14px 8px;max-width:720px;margin:0 auto 0}'+
+    '.ps-co-name{text-align:center;font-size:16px;font-weight:700;margin-bottom:2px}'+
+    '.ps-title{text-align:center;font-size:13px;margin-bottom:7px}'+
+    '.ps-info{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px}'+
+    '.ps-info-col{display:flex;flex-direction:column;gap:2px}'+
+    'table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:6px}'+
+    'th,td{border:1px solid #000;padding:5px 8px;text-align:center}'+
+    'th{background:#e8e8e8;font-weight:700}td{font-weight:700}'+
+    '.ps-footer{display:flex;justify-content:space-between;font-size:12px;margin-top:5px}'+
+    '.ps-cut{display:flex;align-items:center;gap:4px;margin:6px auto;max-width:720px;color:#555;font-size:14px}'+
+    '.ps-cut::after{content:"";flex:1;border-top:1px dashed #888}';
+
   var win = window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>قسائم الرواتب</title><style>'+
-    'body{font-family:Cairo,Arial,sans-serif;font-size:12px;direction:rtl}'+
-    '#payslipBody{padding:1.5rem;max-width:700px;margin:0 auto}'+
-    '.ps-header{text-align:center;border-bottom:3px solid #0f2942;padding-bottom:.8rem;margin-bottom:1rem}'+
-    '.ps-header h3{color:#0f2942;margin:0;font-size:1.2rem}.ps-header p{color:#666;margin:.2rem 0 0;font-size:.8rem}'+
-    '.ps-meta{display:grid;grid-template-columns:1fr 1fr;gap:.3rem 2rem;margin-bottom:1rem;font-size:.84rem}'+
-    '.ps-meta .lbl{color:#777}.ps-meta .val{font-weight:600}'+
-    '.ps-tables{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:.8rem}'+
-    '.ps-tbl{width:100%;border-collapse:collapse;font-size:.82rem}'+
-    '.ps-tbl th{background:#0f2942;color:#fff;padding:.4rem .6rem}'+
-    '.ps-tbl td{padding:.35rem .6rem;border-bottom:1px solid #eee}'+
-    '.ps-tbl .tot td{background:#f5f5f5;font-weight:700;border-top:2px solid #ddd}'+
-    '.ps-net{text-align:center;background:#0f2942;color:#fff;padding:.8rem;border-radius:6px;margin-bottom:1rem}'+
-    '.ps-net .lbl{font-size:.78rem;opacity:.8}.ps-net .amt{font-size:1.7rem;font-weight:700}'+
-    '.ps-sigs{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:1.2rem}'+
-    '.ps-sigs .sig{text-align:center;padding-top:2rem;border-top:1px solid #333;font-size:.8rem;color:#555}'+
-    '</style></head><body>'+allHtml+'</body></html>');
+  win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>قسائم الرواتب</title><style>'+css+'</style></head><body>'+allHtml+'</body></html>');
   win.document.close(); win.print();
 }
 
