@@ -1078,6 +1078,8 @@ function fmtMonthAr(m) {
 // ============================================================
 function genReport() {
   var type=val('rptType'), month=val('rptMonth');
+  // Reset filters
+  setValue('rptEmpSearch',''); setValue('rptDeptFilter','');
   if (type==='payroll'||type==='dept') {
     if (!month) { toast('اختر الشهر','warning'); return; }
     document.getElementById('rptResult').innerHTML='<div class="p-4 text-center"><i class="fas fa-spinner fa-spin me-2"></i>جاري الاحتساب...</div>';
@@ -1086,11 +1088,51 @@ function genReport() {
       payrollCache=res.data;
       if (type==='payroll') renderRptPayroll(res.data,month,res.currency||'ريال');
       else renderRptDept(res.data,month,res.currency||'ريال');
+      showRptFilters(type);
     });
     return;
   }
-  if (type==='loans')      { renderRptLoans(month); return; }
-  if (type==='deductions') { renderRptDeds(month); return; }
+  if (type==='loans')      { renderRptLoans(month); showRptFilters(type); return; }
+  if (type==='deductions') { renderRptDeds(month);  showRptFilters(type); return; }
+}
+
+function showRptFilters(type) {
+  var bar = document.getElementById('rptFilterBar');
+  // Populate dept filter from current data
+  var depts = [...new Set(DB.employees.map(function(e){ return e.dept; }).filter(Boolean))].sort();
+  var opt = '<option value="">كل الفروع</option>'+depts.map(function(d){return '<option value="'+esc(d)+'">'+esc(d)+'</option>';}).join('');
+  document.getElementById('rptDeptFilter').innerHTML = opt;
+  bar.style.display = 'flex';
+  updateRptCount();
+}
+
+function filterRptTable() {
+  var q     = val('rptEmpSearch').toLowerCase().trim();
+  var deptF = val('rptDeptFilter');
+  var type  = val('rptType');
+  var rows  = document.querySelectorAll('#rptResult tbody tr');
+  var vis = 0;
+  rows.forEach(function(tr){
+    var cells = tr.querySelectorAll('td');
+    if (!cells.length) { return; }
+    var nameMatch = true, deptMatch = true;
+    if (q && type !== 'dept') {
+      nameMatch = cells[0] && cells[0].textContent.toLowerCase().includes(q);
+    }
+    if (deptF) {
+      var col = (type === 'dept') ? 0 : 1;
+      deptMatch = cells[col] && cells[col].textContent.trim() === deptF;
+    }
+    var show = nameMatch && deptMatch;
+    tr.style.display = show ? '' : 'none';
+    if (show) vis++;
+  });
+  document.getElementById('rptVisibleCount').textContent = vis + ' نتيجة';
+}
+
+function updateRptCount() {
+  var rows = document.querySelectorAll('#rptResult tbody tr');
+  document.getElementById('rptVisibleCount').textContent = rows.length + ' نتيجة';
 }
 
 function renderRptPayroll(data,month,currency) {
