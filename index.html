@@ -1277,76 +1277,90 @@ function renderRptPayroll(data,month,currency) {
 }
 
 function renderRptDept(data, month, currency) {
-  rptHeaders = ['الفرع','الموظف','الراتب الأساسي','السلف','الخصم الإداري والغياب','إجمالي السلف والخصم','صافي الراتب'];
+  rptHeaders = ['الفرع','الموظف','الراتب الأساسي','السلف','الخصم الإداري والغياب','إجمالي الخصومات','صافي الراتب'];
   rptCache = [];
 
-  // Group by dept
+  // Group by dept preserving order
+  var depts = [];
   var deptMap = {};
   data.forEach(function(r){
     var d = r.dept || 'غير محدد';
-    if (!deptMap[d]) deptMap[d] = [];
+    if (!deptMap[d]) { deptMap[d] = []; depts.push(d); }
     deptMap[d].push(r);
   });
 
-  var grandNet = 0, grandGross = 0, grandLoan = 0, grandExtra = 0;
-  var html = '<div class="card-box-header"><span><i class="fas fa-building me-2"></i>ملخص حسب الفرع — ' + month + '</span></div><div class="p-3">';
+  var grandGross=0, grandLoan=0, grandExtra=0, grandNet=0;
 
-  Object.keys(deptMap).forEach(function(dept) {
+  // Build ONE flat table with dept-header rows inside tbody
+  var rows = '';
+  depts.forEach(function(dept){
     var emps = deptMap[dept];
     var dGross=0, dLoan=0, dExtra=0, dNet=0;
     emps.forEach(function(r){ dGross+=r.gross; dLoan+=r.loanDed; dExtra+=r.extraDed; dNet+=r.net; });
     grandGross+=dGross; grandLoan+=dLoan; grandExtra+=dExtra; grandNet+=dNet;
 
-    html += '<div class="mb-4">';
-    // Dept header
-    html += '<div class="d-flex justify-content-between align-items-center px-3 py-2 mb-1 rounded fw-bold" style="background:var(--primary);color:#fff;font-size:.95rem">';
-    html += '<span><i class="fas fa-building me-2"></i>'+esc(dept)+'</span>';
-    html += '<span class="small opacity-75">'+emps.length+' موظف &nbsp;|&nbsp; صافي: '+fmt(dNet)+' '+currency+'</span>';
-    html += '</div>';
-    // Table
-    html += '<div class="table-responsive"><table class="table table-bordered table-sm mb-0">';
-    html += '<thead class="table-dark"><tr>';
-    html += '<th>#</th><th>الموظف</th><th>الراتب الأساسي</th><th style="color:#ffd54f">السلف</th><th style="color:#ef9a9a">الخصم الإداري والغياب</th><th style="color:#ff7043">إجمالي السلف والخصم</th><th style="color:#a5d6a7">صافي الراتب</th>';
-    html += '</tr></thead><tbody>';
+    // Dept separator row
+    rows += '<tr style="background:var(--primary)">';
+    rows += '<td colspan="7" style="color:#fff;font-weight:700;font-size:.9rem;padding:7px 12px">';
+    rows += '<i class="fas fa-building me-2"></i>'+esc(dept);
+    rows += '<span style="float:left;opacity:.8;font-size:.82rem">'+emps.length+' موظف &nbsp;|&nbsp; الصافي: '+fmt(dNet)+' '+currency+'</span>';
+    rows += '</td></tr>';
 
-    emps.forEach(function(r, i) {
+    // Employee rows
+    emps.forEach(function(r, i){
       var totalDed = r.loanDed + r.extraDed;
       rptCache.push([dept, r.name, r.gross, r.loanDed, r.extraDed, totalDed, r.net]);
-      html += '<tr>';
-      html += '<td class="text-center" style="width:36px">'+(i+1)+'</td>';
-      html += '<td class="fw-bold">'+esc(r.name)+'</td>';
-      html += '<td class="text-center">'+fmt(r.gross)+'</td>';
-      html += '<td class="text-center" style="color:#f59e0b">'+(r.loanDed ? fmt(r.loanDed) : '<span style="opacity:.4">—</span>')+'</td>';
-      html += '<td class="text-center" style="color:#ef4444">'+(r.extraDed ? fmt(r.extraDed) : '<span style="opacity:.4">—</span>')+'</td>';
-      html += '<td class="text-center fw-bold" style="color:#ef4444">'+(totalDed ? fmt(totalDed) : '<span style="opacity:.4">—</span>')+'</td>';
-      html += '<td class="text-center fw-bold" style="color:#22c55e">'+fmt(r.net)+' '+currency+'</td>';
-      html += '</tr>';
+      rows += '<tr>';
+      rows += '<td style="text-align:center;width:34px;color:var(--text3)">'+(i+1)+'</td>';
+      rows += '<td style="font-weight:700">'+esc(r.name)+'</td>';
+      rows += '<td style="text-align:center">'+fmt(r.gross)+'</td>';
+      rows += '<td style="text-align:center;color:#f59e0b;font-weight:700">'+(r.loanDed?fmt(r.loanDed):'—')+'</td>';
+      rows += '<td style="text-align:center;color:#ef4444;font-weight:700">'+(r.extraDed?fmt(r.extraDed):'—')+'</td>';
+      rows += '<td style="text-align:center;color:#ef4444;font-weight:700">'+(totalDed?fmt(totalDed):'—')+'</td>';
+      rows += '<td style="text-align:center;color:#22c55e;font-weight:700">'+fmt(r.net)+'</td>';
+      rows += '</tr>';
     });
 
     // Dept subtotal row
-    html += '<tr style="background:var(--surface2);font-weight:700;border-top:2px solid var(--border)">';
-    html += '<td colspan="2" class="text-end">إجمالي الفرع</td>';
-    html += '<td class="text-center">'+fmt(dGross)+'</td>';
-    html += '<td class="text-center" style="color:#f59e0b">'+fmt(dLoan)+'</td>';
-    html += '<td class="text-center" style="color:#ef4444">'+fmt(dExtra)+'</td>';
-    html += '<td class="text-center fw-bold" style="color:#ef4444">'+fmt(dLoan+dExtra)+'</td>';
-    html += '<td class="text-center fw-bold" style="color:#22c55e">'+fmt(dNet)+' '+currency+'</td>';
-    html += '</tr>';
-
-    html += '</tbody></table></div></div>';
+    rows += '<tr style="background:var(--surface2);font-weight:700;border-top:2px solid var(--accent)">';
+    rows += '<td colspan="2" style="text-align:left;padding-left:12px;color:var(--text2)">إجمالي '+esc(dept)+'</td>';
+    rows += '<td style="text-align:center">'+fmt(dGross)+'</td>';
+    rows += '<td style="text-align:center;color:#f59e0b">'+fmt(dLoan)+'</td>';
+    rows += '<td style="text-align:center;color:#ef4444">'+fmt(dExtra)+'</td>';
+    rows += '<td style="text-align:center;color:#ef4444;font-weight:800">'+fmt(dLoan+dExtra)+'</td>';
+    rows += '<td style="text-align:center;color:#22c55e;font-weight:800">'+fmt(dNet)+'</td>';
+    rows += '</tr>';
+    // Spacer
+    rows += '<tr><td colspan="7" style="height:6px;background:var(--bg)"></td></tr>';
   });
 
-  // Grand total
-  html += '<div class="rounded p-3 mt-2 d-flex justify-content-between flex-wrap gap-2" style="background:var(--primary);color:#fff">';
-  html += '<span class="fw-bold fs-6"><i class="fas fa-calculator me-2"></i>الإجمالي الكلي</span>';
-  html += '<div class="d-flex gap-4 flex-wrap small">';
-  html += '<span>إجمالي الرواتب: <strong>'+fmt(grandGross)+'</strong></span>';
-  html += '<span style="color:#fcd34d">إجمالي السلف: <strong>'+fmt(grandLoan)+'</strong></span>';
-  html += '<span style="color:#fca5a5">إجمالي الخصومات: <strong>'+fmt(grandExtra)+'</strong></span>';
-  html += '<span style="color:#86efac">صافي المسيّر: <strong>'+fmt(grandNet)+' '+currency+'</strong></span>';
-  html += '</div></div>';
+  var html =
+    '<div class="card-box-header"><span><i class="fas fa-building me-2"></i>تفصيل الرواتب حسب الفرع — '+month+'</span></div>'+
+    '<div class="table-responsive p-3">'+
+    '<table class="table table-bordered table-sm mb-2">'+
+    '<thead class="table-dark"><tr>'+
+      '<th style="width:34px">#</th>'+
+      '<th>الموظف</th>'+
+      '<th style="text-align:center">الراتب الأساسي</th>'+
+      '<th style="text-align:center;color:#fcd34d">السلف</th>'+
+      '<th style="text-align:center;color:#fca5a5">الخصم الإداري والغياب</th>'+
+      '<th style="text-align:center;color:#fca5a5">إجمالي الخصومات</th>'+
+      '<th style="text-align:center;color:#86efac">صافي الراتب</th>'+
+    '</tr></thead>'+
+    '<tbody>'+rows+'</tbody>'+
+    '</table>'+
+    // Grand total bar
+    '<div class="rounded p-3 d-flex justify-content-between flex-wrap gap-3" style="background:var(--primary);color:#fff">'+
+      '<span style="font-weight:800;font-size:.95rem"><i class="fas fa-calculator me-2"></i>الإجمالي الكلي</span>'+
+      '<div class="d-flex gap-4 flex-wrap" style="font-size:.85rem">'+
+        '<span>إجمالي الرواتب: <strong>'+fmt(grandGross)+'</strong></span>'+
+        '<span style="color:#fcd34d">إجمالي السلف: <strong>'+fmt(grandLoan)+'</strong></span>'+
+        '<span style="color:#fca5a5">إجمالي الخصومات: <strong>'+fmt(grandExtra)+'</strong></span>'+
+        '<span style="color:#86efac">صافي المسيّر: <strong>'+fmt(grandNet)+' '+currency+'</strong></span>'+
+      '</div>'+
+    '</div>'+
+    '</div>';
 
-  html += '</div>';
   document.getElementById('rptResult').innerHTML = html;
 }
 
