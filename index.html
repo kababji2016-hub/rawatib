@@ -1359,19 +1359,98 @@ function doSaveEmp(e) {
 // ============================================================
 //  CRUD — Loan
 // ============================================================
+function setLoanTab(type) {
+  var isSalaf = (type === 'سلفة');
+  setValue('l_type', type);
+  document.getElementById('loanFields_salaf').style.display = isSalaf ? '' : 'none';
+  document.getElementById('loanFields_qard').style.display  = isSalaf ? 'none' : '';
+  document.getElementById('tab_salaf').className = 'btn flex-fill loan-tab-btn ' + (isSalaf ? 'btn-primary' : 'btn-outline-primary');
+  document.getElementById('tab_qard').className  = 'btn flex-fill loan-tab-btn ' + (!isSalaf ? 'btn-primary' : 'btn-outline-primary');
+  document.getElementById('loanModalTitle').innerHTML =
+    '<i class="fas fa-' + (isSalaf ? 'money-bill-wave' : 'file-invoice-dollar') + ' me-2"></i>' +
+    (isSalaf ? 'إضافة / تعديل سلفة' : 'إضافة / تعديل قرض');
+  // Toggle required attributes
+  document.getElementById('l_amount_salaf').required = isSalaf;
+  document.getElementById('l_amount_qard').required  = !isSalaf;
+  document.getElementById('l_monthly_qard').required = !isSalaf;
+}
+
+function onLoanEmpChange() {
+  var emp = findEmp(val('l_empId'));
+  setValue('l_dept', emp ? (emp.dept || '') : '');
+}
+
+function syncRemainingQ() {
+  var a = val('l_amount_qard');
+  if (!val('l_remaining_qard')) setValue('l_remaining_qard', a);
+}
+
 function openLoanModal(loanId) {
   fillEmpSelect('l_empId');
-  var loan=loanId?DB.loans.find(function(l){return String(l.id)===String(loanId);}):null;
-  ['id','empId','type','amount','remaining','monthly','date','reason','status'].forEach(function(f){setValue('l_'+f,loan?(loan[f]||''):(f==='status'?'active':''));});
-  if (!loanId) setValue('l_date',today());
+  var loan = loanId ? DB.loans.find(function(l){ return String(l.id)===String(loanId); }) : null;
+
+  // Reset
+  setValue('l_id', loan ? (loan.id||'') : '');
+  setValue('l_status', loan ? (loan.status||'active') : 'active');
+
+  if (loan) {
+    // Determine type
+    var isQard = (loan.type === 'قرض' || loan.type === 'فرض' || loan.type === 'personal');
+    setLoanTab(isQard ? 'قرض' : 'سلفة');
+    setValue('l_empId', loan.empId||'');
+    onLoanEmpChange();
+    if (isQard) {
+      setValue('l_amount_qard',    loan.amount||'');
+      setValue('l_monthly_qard',   loan.monthly||'');
+      setValue('l_remaining_qard', loan.remaining||'');
+      setValue('l_date_qard',      fmtDate(loan.date));
+      setValue('l_reason_qard',    loan.reason||'');
+    } else {
+      setValue('l_amount_salaf',  loan.amount||'');
+      setValue('l_reason_salaf',  loan.reason||'');
+    }
+  } else {
+    // New record defaults
+    setLoanTab('سلفة');
+    setValue('l_empId',''); setValue('l_dept','');
+    setValue('l_amount_salaf',''); setValue('l_reason_salaf','');
+    setValue('l_amount_qard',''); setValue('l_monthly_qard','');
+    setValue('l_remaining_qard',''); setValue('l_reason_qard','');
+    setValue('l_date_qard', today());
+  }
   modal('loanModal');
 }
-function syncRemaining() { var a=val('l_amount'); if (!val('l_remaining')) setValue('l_remaining',a); }
+
 function doSaveLoan(e) {
   e.preventDefault();
-  var rec={id:val('l_id')||('LOAN-'+Date.now()),empId:val('l_empId'),type:val('l_type'),amount:+val('l_amount')||0,remaining:+val('l_remaining')||+val('l_amount')||0,monthly:+val('l_monthly')||0,date:val('l_date'),reason:val('l_reason'),status:val('l_status')};
+  var type   = val('l_type');
+  var isQard = (type === 'قرض');
+  var amount, monthly, remaining, date, reason;
+
+  if (isQard) {
+    amount    = +val('l_amount_qard')    || 0;
+    monthly   = +val('l_monthly_qard')   || 0;
+    remaining = +val('l_remaining_qard') || amount;
+    date      = val('l_date_qard');
+    reason    = val('l_reason_qard');
+  } else {
+    amount    = +val('l_amount_salaf') || 0;
+    monthly   = amount;   // سلفة: القسط = المبلغ كاملاً (تُخصم دفعة واحدة)
+    remaining = amount;
+    date      = today();
+    reason    = val('l_reason_salaf');
+  }
+
+  var rec = {
+    id: val('l_id') || ('LOAN-'+Date.now()),
+    empId: val('l_empId'),
+    dept:  val('l_dept'),
+    type:  type,
+    amount: amount, monthly: monthly, remaining: remaining,
+    date: date, reason: reason, status: val('l_status')
+  };
   callServer('syncRecord',{sheet:'loans',record:rec,operation:'upsert'},function(res){
-    if (res&&res.success) { closeModal('loanModal'); toast('تم حفظ القرض','success'); loadAll(); }
+    if (res&&res.success) { closeModal('loanModal'); toast('تم الحفظ بنجاح','success'); loadAll(); }
     else toast('خطأ: '+(res&&res.error),'danger');
   });
 }
