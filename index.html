@@ -148,13 +148,16 @@ body {
 
 /* Scissors cut separator */
 .ps-cut {
-  display:flex; align-items:center; gap:4px;
-  margin:4px 0; color:#555; font-size:13px; user-select:none;
+  display:flex; align-items:center; gap:5px;
+  margin:3px 0; color:#555; font-size:14px; user-select:none;
 }
-.ps-cut::after { content:''; flex:1; border-top:1px dashed #888; }
+.ps-cut::after { content:''; flex:1; border-top:1.5px dashed #888; }
 
-/* Modal display */
-#payslipBody { padding:1rem; }
+/* Modal receipt wrapper */
+#payslipBody .ps-receipt {
+  background:#fff; color:#000; max-width:660px; margin:0 auto;
+  font-size:13px;
+}
 
 /* ========== Loading ========== */
 #loadingScreen { text-align:center; padding:4rem 2rem; color:var(--text3); }
