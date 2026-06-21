@@ -740,7 +740,7 @@ function buildDeptFilters() {
   var depts = [...new Set(DB.employees.map(function(e){ return e.dept; }).filter(Boolean))].sort();
   document.getElementById('deptList').innerHTML = depts.map(function(d){ return '<option value="'+esc(d)+'">'; }).join('');
   var opt = '<option value="">كل الفروع</option>' + depts.map(function(d){ return '<option value="'+esc(d)+'">'+esc(d)+'</option>'; }).join('');
-  ['empDeptFilter','loanDeptFilter','dedDeptFilter','payDeptFilter','psDeptFilter'].forEach(function(id){
+  ['empDeptFilter','loanDeptFilter','dedDeptFilter','payDeptFilter','psDeptFilter','rptDeptFilter'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.innerHTML = opt;
   });
 }
