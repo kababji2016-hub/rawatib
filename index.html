@@ -1936,7 +1936,7 @@ function doSaveDed(e) {
 function del(sheet,id) {
   if (!confirm('هل أنت متأكد من الحذف؟')) return;
   callServer('syncRecord',{sheet:sheet,record:{id:id},operation:'delete'},function(res){
-    if (res&&res.success) { toast('تم الحذف','success'); loadAll(); }
+    if (res&&res.success) { fbDelete(sheet, id); toast('تم الحذف','success'); loadAll(); }
     else toast('خطأ في الحذف','danger');
   });
 }
