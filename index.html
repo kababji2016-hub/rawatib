@@ -128,24 +128,33 @@ body {
 .ps-card .ps-deductions { font-size:.77rem; color:#c62828; }
 [data-theme="dark"] .ps-card .ps-deductions { color:#f85149; }
 
-/* ========== Payslip Print ========== */
-#payslipBody { background:#fff; color:#000; padding:2rem; max-width:700px; margin:0 auto; font-family:'Cairo',sans-serif; }
-#payslipBody .ps-header { text-align:center; border-bottom:3px solid #0f2942; padding-bottom:1rem; margin-bottom:1.2rem; }
-#payslipBody .ps-header h3 { color:#0f2942; margin:0; font-size:1.35rem; }
-#payslipBody .ps-header p  { color:#666; margin:.2rem 0 0; font-size:.82rem; }
-#payslipBody .ps-meta { display:grid; grid-template-columns:1fr 1fr; gap:.35rem 2rem; margin-bottom:1.2rem; font-size:.87rem; }
-#payslipBody .ps-meta .lbl { color:#777; }
-#payslipBody .ps-meta .val { font-weight:600; }
-#payslipBody .ps-tables { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem; }
-#payslipBody .ps-tbl { width:100%; border-collapse:collapse; font-size:.85rem; }
-#payslipBody .ps-tbl th { background:#0f2942; color:#fff; padding:.45rem .7rem; font-weight:600; }
-#payslipBody .ps-tbl td { padding:.4rem .7rem; border-bottom:1px solid #eee; }
-#payslipBody .ps-tbl .tot td { background:#f5f5f5; font-weight:700; border-top:2px solid #ddd; }
-#payslipBody .ps-net { text-align:center; background:#0f2942; color:#fff; padding:1rem; border-radius:8px; margin-bottom:1.5rem; }
-#payslipBody .ps-net .lbl { font-size:.82rem; opacity:.8; }
-#payslipBody .ps-net .amt { font-size:1.9rem; font-weight:700; }
-#payslipBody .ps-sigs { display:grid; grid-template-columns:1fr 1fr; gap:2rem; margin-top:1.5rem; }
-#payslipBody .ps-sigs .sig { text-align:center; padding-top:2.5rem; border-top:1px solid #333; font-size:.82rem; color:#555; }
+/* ========== Payslip (receipt-style) ========== */
+.ps-receipt {
+  background:#fff; color:#000; font-family:'Cairo',Arial,sans-serif;
+  font-size:13px; direction:rtl; width:100%; max-width:720px;
+  margin:0 auto; border:2px solid #000; padding:10px 14px 8px;
+  box-sizing:border-box;
+}
+.ps-receipt .ps-co-name { text-align:center; font-size:16px; font-weight:700; margin-bottom:2px; }
+.ps-receipt .ps-title   { text-align:center; font-size:13px; margin-bottom:7px; }
+.ps-receipt .ps-info    { display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px; }
+.ps-receipt .ps-info-col { display:flex; flex-direction:column; gap:2px; }
+.ps-receipt .ps-info-col span { display:block; }
+.ps-receipt table { width:100%; border-collapse:collapse; font-size:12.5px; margin-bottom:6px; }
+.ps-receipt table th, .ps-receipt table td { border:1px solid #000; padding:5px 8px; text-align:center; }
+.ps-receipt table th { background:#e8e8e8; font-weight:700; }
+.ps-receipt table td { font-weight:700; }
+.ps-receipt .ps-footer { display:flex; justify-content:space-between; font-size:12px; margin-top:5px; }
+
+/* Scissors cut separator */
+.ps-cut {
+  display:flex; align-items:center; gap:4px;
+  margin:4px 0; color:#555; font-size:13px; user-select:none;
+}
+.ps-cut::after { content:''; flex:1; border-top:1px dashed #888; }
+
+/* Modal display */
+#payslipBody { padding:1rem; }
 
 /* ========== Loading ========== */
 #loadingScreen { text-align:center; padding:4rem 2rem; color:var(--text3); }
