@@ -233,9 +233,18 @@ input[type="month"].month-styled:focus {
     <button class="nav-link"        onclick="show('reports')">    <i class="fas fa-chart-bar"></i> التقارير</button>
     <button class="nav-link"        onclick="show('settings')">   <i class="fas fa-cog"></i> الإعدادات</button>
   </nav>
-  <div class="sidebar-footer">
-    <button onclick="loadAll()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
-    <button onclick="toggleDark()" id="darkBtn" title="الوضع الليلي"><i class="fas fa-moon"></i></button>
+  <div class="sidebar-footer" style="flex-direction:column;gap:.4rem">
+    <div id="fbStatus" style="font-size:.72rem;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:5px;padding:0 .2rem">
+      <i class="fas fa-circle" style="color:#888;font-size:8px"></i> Firebase
+    </div>
+    <div style="display:flex;gap:.5rem">
+      <button onclick="loadAll()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+      <button onclick="toggleDark()" id="darkBtn" title="الوضع الليلي"><i class="fas fa-moon"></i></button>
+    </div>
+  </div>
+  <!-- Live update badge -->
+  <div id="liveUpdateBadge" style="position:fixed;bottom:1.2rem;left:1.2rem;background:#22c55e;color:#fff;padding:.35rem .8rem;border-radius:20px;font-size:.78rem;font-weight:700;opacity:0;transition:opacity .4s;z-index:9999;pointer-events:none">
+    <i class="fas fa-bolt me-1"></i> تحديث فوري
   </div>
 </div>
 
