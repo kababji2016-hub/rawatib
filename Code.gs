@@ -70,8 +70,7 @@ var SHEET_DEFS = {
       'بواسطة':         'addedBy'
     }
   },
-  arrears:    { aliases: ['arrears'] },
-  attendance: { aliases: ['attendance'] }
+  arrears:    { aliases: ['arrears'] }
 };
 
 // ======================================================
