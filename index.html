@@ -886,9 +886,8 @@ function openPayslip(empId, month) {
         (n(emp.transport)?'<tr><td>بدل المواصلات</td><td class="text-end">'+fmt(emp.transport)+' '+currency+'</td></tr>':'')+
         (n(emp.phone)?'<tr><td>بدل الهاتف</td><td class="text-end">'+fmt(emp.phone)+' '+currency+'</td></tr>':'')+
         (n(emp.other)?'<tr><td>بدلات أخرى</td><td class="text-end">'+fmt(emp.other)+' '+currency+'</td></tr>':'')+
-        (row.bonuses?'<tr><td>مكافآت</td><td class="text-end text-success">'+fmt(row.bonuses)+' '+currency+'</td></tr>':'')+
         (row.arrears?'<tr><td>مستحقات سابقة</td><td class="text-end text-success">'+fmt(row.arrears)+' '+currency+'</td></tr>':'')+
-        '<tr class="total-row"><td>إجمالي المستحقات</td><td class="text-end text-success">'+fmt(gross + row.bonuses + row.arrears)+' '+currency+'</td></tr>'+
+        '<tr class="total-row"><td>إجمالي المستحقات</td><td class="text-end text-success">'+fmt(gross + row.arrears)+' '+currency+'</td></tr>'+
       '</tbody>' +
     '</table>' +
     '</div>' +
