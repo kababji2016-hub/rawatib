@@ -1664,14 +1664,107 @@ function doSaveLoan(e) {
 //  CRUD — Deduction
 // ============================================================
 function openDedModal(dedId) {
-  fillEmpSelect('d_empId');
-  var ded=dedId?DB.deductions.find(function(d){return String(d.id)===String(dedId);}):null;
-  ['id','empId','type','amount','month','desc','status'].forEach(function(f){setValue('d_'+f,ded?(ded[f]||''):(f==='status'?'applied':f==='month'?curMonth():''));});
+  // Populate branch filter
+  var depts = [...new Set(DB.employees.filter(function(e){ return e.status==='active'||e.status==='نشط'; }).map(function(e){ return e.dept; }).filter(Boolean))].sort();
+  var deptSel = document.getElementById('d_deptFilter');
+  deptSel.innerHTML = '<option value="">كل الفروع</option>' + depts.map(function(d){ return '<option value="'+esc(d)+'">'+esc(d)+'</option>'; }).join('');
+
+  var ded = dedId ? DB.deductions.find(function(d){ return String(d.id)===String(dedId); }) : null;
+
+  // Pre-select dept if editing
+  var preEmpId = ded ? String(ded.empId||'') : '';
+  var preEmp   = preEmpId ? DB.employees.find(function(e){ return String(e.id)===preEmpId; }) : null;
+  if (preEmp && preEmp.dept) deptSel.value = preEmp.dept;
+
+  // Fill employee list filtered by dept
+  fillDedEmpList();
+
+  setValue('d_id',     ded ? (ded.id||'')     : '');
+  setValue('d_empId',  ded ? (ded.empId||'')   : '');
+  setValue('d_type',   ded ? (ded.type||'غياب'): 'غياب');
+  setValue('d_amount', ded ? (ded.amount||'')  : '');
+  setValue('d_month',  ded ? (ded.month||curMonth()) : curMonth());
+  setValue('d_desc',   ded ? (ded.desc||'')    : '');
+  setValue('d_status', ded ? (ded.status||'applied') : 'applied');
+  setValue('d_days',   ded ? (ded.days||'')    : '');
+  setValue('d_absDate',ded ? (ded.absDate||'') : '');
+
+  updateDedDailyInfo();
   modal('dedModal');
 }
+
+function fillDedEmpList() {
+  var deptF = val('d_deptFilter');
+  var saved = val('d_empId');
+  var emps  = DB.employees.filter(function(e){
+    var active = (e.status==='active'||e.status==='نشط'||!e.status);
+    return active && (!deptF || e.dept===deptF);
+  });
+  var sel = document.getElementById('d_empId');
+  sel.innerHTML = '<option value="">-- اختر موظف --</option>' + emps.map(function(e){
+    return '<option value="'+esc(e.id)+'">'+esc(e.name)+'</option>';
+  }).join('');
+  if (saved) sel.value = saved;
+}
+
+function onDedDeptChange() {
+  setValue('d_empId','');
+  fillDedEmpList();
+  updateDedDailyInfo();
+}
+
+function onDedEmpChange() {
+  updateDedDailyInfo();
+  // Auto-fill month from absence date if set
+  var absDate = val('d_absDate');
+  if (absDate) {
+    setValue('d_month', absDate.substring(0,7));
+  }
+  // Recalculate amount if days already entered
+  onDedDaysChange();
+}
+
+function updateDedDailyInfo() {
+  var empId = val('d_empId');
+  var emp   = empId ? DB.employees.find(function(e){ return String(e.id)===String(empId); }) : null;
+  var info  = document.getElementById('d_dailyInfo');
+  if (emp && emp.basic) {
+    var basic = +emp.basic || 0;
+    var daily = +(basic / 30).toFixed(2);
+    document.getElementById('d_basicDisp').textContent = basic.toLocaleString('ar-SA');
+    document.getElementById('d_dailyDisp').textContent = daily.toLocaleString('ar-SA', {maximumFractionDigits:2});
+    info.style.display = '';
+  } else {
+    info.style.display = 'none';
+  }
+}
+
+function onDedDaysChange() {
+  var days  = parseFloat(val('d_days')) || 0;
+  var empId = val('d_empId');
+  var emp   = empId ? DB.employees.find(function(e){ return String(e.id)===String(empId); }) : null;
+  if (days > 0 && emp && emp.basic) {
+    var basic = +emp.basic || 0;
+    var daily = basic / 30;
+    var amount = +(days * daily).toFixed(2);
+    setValue('d_amount', amount);
+  }
+}
+
 function doSaveDed(e) {
   e.preventDefault();
-  var rec={id:val('d_id')||('DED-'+Date.now()),empId:val('d_empId'),type:val('d_type'),amount:+val('d_amount')||0,month:val('d_month'),desc:val('d_desc'),status:val('d_status')};
+  var rec = {
+    id:      val('d_id') || ('DED-'+Date.now()),
+    empId:   val('d_empId'),
+    type:    val('d_type'),
+    amount:  +val('d_amount') || 0,
+    month:   val('d_month'),
+    days:    val('d_days') ? +val('d_days') : '',
+    absDate: val('d_absDate'),
+    desc:    val('d_desc'),
+    status:  val('d_status')
+  };
+  if (!rec.empId) { toast('اختر الموظف أولاً','warning'); return; }
   callServer('syncRecord',{sheet:'deductions',record:rec,operation:'upsert'},function(res){
     if (res&&res.success) { closeModal('dedModal'); toast('تم حفظ الخصم','success'); loadAll(); }
     else toast('خطأ: '+(res&&res.error),'danger');
