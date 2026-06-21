@@ -71,7 +71,6 @@ var SHEET_DEFS = {
     }
   },
   arrears:    { aliases: ['arrears'] },
-  bonuses:    { aliases: ['bonuses'] },
   attendance: { aliases: ['attendance'] }
 };
 
