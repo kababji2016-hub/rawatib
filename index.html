@@ -454,7 +454,7 @@ body { background:#f0f2f5; font-family:'Segoe UI',Tahoma,Arial,sans-serif; }
 //  State & Config
 // ============================================================
 var DB  = { employees:[], loans:[], deductions:[], arrears:[], bonuses:[], attendance:[], settings:{} };
-var API = localStorage.getItem('apiUrl') || '';
+var API = localStorage.getItem('apiUrl') || 'https://script.google.com/macros/s/AKfycbxv-ZjBkBcjel5z5rFtsg-91zKZKpqA5HxMrEiKnT63nFVLlD9FJsGbaNBbxW9uEFfG/exec';
 var isGAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined');
 
 // ============================================================
