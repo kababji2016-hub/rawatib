@@ -310,12 +310,12 @@ input[type="month"].month-styled:focus {
   <div id="payroll" class="section">
     <div class="page-header">
       <h4><i class="fas fa-file-invoice-dollar me-2"></i>مسيّر الرواتب</h4>
-      <div class="d-flex gap-2 flex-wrap no-print">
-        <input type="month" id="payMonth" class="form-control form-control-sm">
+      <div class="d-flex gap-2 flex-wrap no-print align-items-center">
+        <input type="month" id="payMonth" class="month-styled">
         <select class="form-select form-select-sm" style="max-width:160px" id="payDeptFilter"><option value="">كل الفروع</option></select>
-        <button class="btn btn-primary btn-sm" onclick="calcPayroll()"><i class="fas fa-calculator me-1"></i>احتساب</button>
-        <button class="btn btn-outline-success btn-sm" onclick="exportPayrollCSV()"><i class="fas fa-file-excel me-1"></i>Excel</button>
-        <button class="btn btn-outline-secondary btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>طباعة</button>
+        <button class="btn btn-calc btn-sm" onclick="calcPayroll()"><i class="fas fa-calculator me-1"></i>احتساب</button>
+        <button class="btn btn-excel btn-sm" onclick="exportPayrollCSV()"><i class="fas fa-file-excel me-1"></i>Excel</button>
+        <button class="btn btn-print btn-sm" onclick="window.print()"><i class="fas fa-print me-1"></i>طباعة</button>
       </div>
     </div>
     <div class="card-box">
