@@ -1708,7 +1708,7 @@ function doSaveEmp(e) {
     status:      val('e_status')
   };
   callServer('syncRecord',{sheet:'employees',record:rec,operation:'upsert'},function(res){
-    if (res&&res.success) { closeModal('empModal'); toast('تم حفظ الموظف','success'); loadAll(); }
+    if (res&&res.success) { fbSet('employees', rec.id, rec); closeModal('empModal'); toast('تم حفظ الموظف','success'); loadAll(); }
     else toast('خطأ: '+(res&&res.error),'danger');
   });
 }
