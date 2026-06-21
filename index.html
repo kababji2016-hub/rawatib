@@ -1023,14 +1023,38 @@ function callServer(action, payload, cb) {
 function loadAll() {
   document.getElementById('loadingScreen').style.display = 'block';
   document.querySelectorAll('.section').forEach(function(s){ s.style.display='none'; });
-  callServer('getAll', {}, function(res) {
-    document.getElementById('loadingScreen').style.display = 'none';
-    if (!res || !res.success) { toast('خطأ في تحميل البيانات', 'danger'); return; }
-    DB = res.data;
-    applySettings();
-    buildDeptFilters();
-    renderAll();
-    show('dashboard');
+
+  // Try Firebase first (fast), fallback to GAS
+  loadFromFirebase(function(fbOk) {
+    if (fbOk) {
+      // Firebase has data — load settings from GAS only, keep DB from Firebase
+      callServer('getAll', {}, function(res) {
+        document.getElementById('loadingScreen').style.display = 'none';
+        if (res && res.success && res.data && res.data.settings) {
+          DB.settings = res.data.settings;
+          DB.arrears  = res.data.arrears || [];
+        }
+        applySettings();
+        buildDeptFilters();
+        renderAll();
+        show('dashboard');
+        startRealtimeListeners();
+      });
+    } else {
+      // Firebase empty — load from GAS and seed Firebase
+      callServer('getAll', {}, function(res) {
+        document.getElementById('loadingScreen').style.display = 'none';
+        if (!res || !res.success) { toast('خطأ في تحميل البيانات', 'danger'); return; }
+        DB = res.data;
+        applySettings();
+        buildDeptFilters();
+        renderAll();
+        show('dashboard');
+        // Seed Firebase with existing data
+        seedFirebaseFromGAS();
+        startRealtimeListeners();
+      });
+    }
   });
 }
 
