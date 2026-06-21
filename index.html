@@ -728,29 +728,79 @@ input[type="month"].month-styled:focus {
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-dark">
-        <h5 class="modal-title">إضافة / تعديل خصم</h5>
+        <h5 class="modal-title"><i class="fas fa-minus-circle me-2"></i>إضافة / تعديل خصم</h5>
         <button type="button" class="btn-close modal-header-dark" data-bs-dismiss="modal"></button>
       </div>
       <form id="dedForm" onsubmit="doSaveDed(event)">
         <div class="modal-body">
           <input type="hidden" id="d_id">
-          <div class="mb-3"><label class="form-label">الموظف *</label><select class="form-select" id="d_empId" required></select></div>
-          <div class="mb-3"><label class="form-label">نوع الخصم</label>
+
+          <!-- Branch filter + Employee -->
+          <div class="row g-3 mb-3">
+            <div class="col-5">
+              <label class="form-label">الفرع</label>
+              <select class="form-select" id="d_deptFilter" onchange="onDedDeptChange()">
+                <option value="">كل الفروع</option>
+              </select>
+            </div>
+            <div class="col-7">
+              <label class="form-label">الموظف *</label>
+              <select class="form-select" id="d_empId" required onchange="onDedEmpChange()"></select>
+            </div>
+          </div>
+
+          <!-- Daily rate info -->
+          <div id="d_dailyInfo" class="alert alert-info py-1 px-3 mb-3 small" style="display:none">
+            <i class="fas fa-info-circle me-1"></i>
+            الراتب الأساسي: <strong id="d_basicDisp">0</strong> ريال &nbsp;|&nbsp;
+            قيمة اليوم: <strong id="d_dailyDisp">0</strong> ريال
+          </div>
+
+          <!-- Type -->
+          <div class="mb-3">
+            <label class="form-label">نوع الخصم</label>
             <select class="form-select" id="d_type">
-              <option value="غياب">غياب</option><option value="مخالفة">مخالفة</option>
-              <option value="absence">غياب بدون أذن</option><option value="late">تأخير</option>
-              <option value="penalty">جزاء</option><option value="other">أخرى</option>
+              <option value="غياب">غياب</option>
+              <option value="غياب بدون أذن">غياب بدون أذن</option>
+              <option value="تأخير">تأخير</option>
+              <option value="مخالفة">مخالفة</option>
+              <option value="جزاء">جزاء</option>
+              <option value="أخرى">أخرى</option>
             </select>
           </div>
-          <div class="row g-3">
-            <div class="col-6"><label class="form-label">المبلغ *</label><input type="number" class="form-control" id="d_amount" required min="0"></div>
-            <div class="col-6"><label class="form-label">الشهر</label><input type="month" class="form-control" id="d_month"></div>
+
+          <!-- Days + Absence date -->
+          <div class="row g-3 mb-3">
+            <div class="col-5">
+              <label class="form-label">عدد الأيام</label>
+              <input type="number" class="form-control" id="d_days" min="0" step="0.5" placeholder="0" oninput="onDedDaysChange()">
+            </div>
+            <div class="col-7">
+              <label class="form-label">تاريخ الغياب</label>
+              <input type="date" class="form-control" id="d_absDate">
+            </div>
           </div>
-          <div class="mt-3"><label class="form-label">البيان</label><input class="form-control" id="d_desc"></div>
-          <div class="mt-3"><label class="form-label">الحالة</label>
+
+          <!-- Amount + Month -->
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">المبلغ * <span class="text-muted small">(ريال)</span></label>
+              <input type="number" class="form-control" id="d_amount" required min="0" step="0.01" placeholder="0.00">
+            </div>
+            <div class="col-6">
+              <label class="form-label">الشهر</label>
+              <input type="month" class="form-control" id="d_month">
+            </div>
+          </div>
+
+          <!-- Description + Status -->
+          <div class="mb-3"><label class="form-label">البيان</label><input class="form-control" id="d_desc" placeholder="ملاحظات إضافية..."></div>
+          <div class="mb-2">
+            <label class="form-label">الحالة</label>
             <select class="form-select" id="d_status">
-              <option value="applied">مطبّق</option><option value="once">مرة واحدة</option>
-              <option value="pending">معلّق</option><option value="recurring">متكرر شهرياً</option>
+              <option value="applied">مطبّق</option>
+              <option value="pending">معلّق</option>
+              <option value="recurring">متكرر شهرياً</option>
             </select>
           </div>
         </div>
