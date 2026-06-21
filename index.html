@@ -1212,8 +1212,8 @@ function fillEmpSelect(selectId) {
 }
 
 function actionBtns(type, id) {
-  var editFn = { emp:'openEmpModal', loan:'openLoanModal', ded:'openDedModal', bon:'openBonModal' }[type];
-  var sheet  = { emp:'employees', loan:'loans', ded:'deductions', bon:'bonuses' }[type];
+  var editFn = { emp:'openEmpModal', loan:'openLoanModal', ded:'openDedModal' }[type];
+  var sheet  = { emp:'employees', loan:'loans', ded:'deductions' }[type];
   return '<button class="btn btn-sm btn-outline-primary me-1" onclick="'+editFn+'(\''+id+'\')"><i class="fas fa-edit"></i></button>'+
          '<button class="btn btn-sm btn-outline-danger" onclick="del(\''+sheet+'\',\''+id+'\')"><i class="fas fa-trash"></i></button>';
 }
