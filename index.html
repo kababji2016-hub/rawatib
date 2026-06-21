@@ -524,31 +524,70 @@ input[type="month"].month-styled:focus {
 
 <!-- Employee Modal -->
 <div class="modal fade" id="empModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header modal-header-dark">
-        <h5 class="modal-title" id="empModalTitle">إضافة موظف</h5>
+        <h5 class="modal-title" id="empModalTitle"><i class="fas fa-user-plus me-2"></i>إضافة موظف</h5>
         <button type="button" class="btn-close modal-header-dark" data-bs-dismiss="modal"></button>
       </div>
       <form id="empForm" onsubmit="doSaveEmp(event)">
         <div class="modal-body">
           <input type="hidden" id="e_id">
           <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">الاسم الكامل *</label><input class="form-control" id="e_name" required></div>
-            <div class="col-md-6"><label class="form-label">رقم الهوية</label><input class="form-control" id="e_natId"></div>
-            <div class="col-md-6"><label class="form-label">الفرع / القسم</label><input class="form-control" id="e_dept" list="deptList"></div>
-            <datalist id="deptList"></datalist>
-            <div class="col-md-6"><label class="form-label">المسمى الوظيفي</label><input class="form-control" id="e_pos"></div>
-            <div class="col-md-4"><label class="form-label">الراتب الأساسي *</label><input type="number" class="form-control" id="e_basic" required min="0"></div>
-            <div class="col-md-4"><label class="form-label">بدل السكن</label><input type="number" class="form-control" id="e_housing" min="0" value="0"></div>
-            <div class="col-md-4"><label class="form-label">بدل المواصلات</label><input type="number" class="form-control" id="e_transport" min="0" value="0"></div>
-            <div class="col-md-4"><label class="form-label">بدل الهاتف</label><input type="number" class="form-control" id="e_phone" min="0" value="0"></div>
-            <div class="col-md-4"><label class="form-label">بدلات أخرى</label><input type="number" class="form-control" id="e_other" min="0" value="0"></div>
-            <div class="col-md-4"><label class="form-label">تاريخ التعيين</label><input type="date" class="form-control" id="e_joinDate"></div>
-            <div class="col-md-8"><label class="form-label">رقم الآيبان</label><input class="form-control" id="e_iban"></div>
-            <div class="col-md-4"><label class="form-label">الحالة</label>
-              <select class="form-select" id="e_status"><option value="active">نشط</option><option value="inactive">غير نشط</option></select>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold">اسم الموظف <span class="text-danger">*</span></label>
+              <input class="form-control" id="e_name" required placeholder="الاسم الكامل">
             </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الفرع</label>
+              <input class="form-control" id="e_dept" list="deptList" placeholder="اختر أو اكتب الفرع">
+              <datalist id="deptList"></datalist>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">رقم الهوية</label>
+              <input class="form-control" id="e_natId" placeholder="رقم الهوية الوطنية">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الجنسية</label>
+              <input class="form-control" id="e_nationality" list="natList" placeholder="سعودي / يمني / ...">
+              <datalist id="natList">
+                <option value="سعودي"><option value="يمني"><option value="مصري">
+                <option value="سوداني"><option value="باكستاني"><option value="هندي">
+                <option value="بنغالي"><option value="فلبيني"><option value="إثيوبي">
+              </datalist>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الراتب الأساسي <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="e_basic" required min="0" placeholder="0.00">
+                <span class="input-group-text">ريال</span>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold">الحالة</label>
+              <div class="d-flex gap-3">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="e_status_r" id="e_status_active" value="active" checked>
+                  <label class="form-check-label" for="e_status_active">
+                    <span class="badge badge-on px-2 py-1">نشط</span>
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="e_status_r" id="e_status_inactive" value="inactive">
+                  <label class="form-check-label" for="e_status_inactive">
+                    <span class="badge badge-off px-2 py-1">غير نشط</span>
+                  </label>
+                </div>
+              </div>
+              <input type="hidden" id="e_status" value="active">
+            </div>
+
           </div>
         </div>
         <div class="modal-footer">
