@@ -630,6 +630,7 @@ var DB  = { employees:[], loans:[], deductions:[], arrears:[], settings:{} };
 var API = localStorage.getItem('apiUrl') || 'https://script.google.com/macros/s/AKfycbxA3xQtw4klM0zOJf-dRM2YPPh_hwpXCoeIXBlVVczsQC-zQfMz5aE70uCwsVsdJjzj/exec';
 var isGAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined');
 var payrollCache = [];
+var payslipsCache = [];        // full result from last calcPayslips call
 var rptCache = [], rptHeaders = [];
 var currentPayslipMonth = '';
 
