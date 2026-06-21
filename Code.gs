@@ -5,7 +5,7 @@
 
 // ⚠️ ضع معرّف جدول البيانات من رابطه:
 // https://docs.google.com/spreadsheets/d/[المعرّف]/edit
-const SHEET_ID = 'YOUR_SPREADSHEET_ID_HERE';
+const SHEET_ID = '1cNlObaJBupKzCpq8AzluPSEv5AGda_URDaBsh6bTnQM';
 
 // قائمة الإيميلات المسموح لها (فارغة = جميع حسابات Google)
 const ALLOWED_EMAILS = [];
