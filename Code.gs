@@ -298,18 +298,11 @@ function handleCalcPayroll(ss, payload) {
         })
         .reduce(function(s, a) { return s + (+a.amount || 0); }, 0);
 
-      var att     = d.attendance.find(function(a) {
-        return String(a.empId) === String(emp.id) &&
-               String(a.month || '').substring(0, 7) === month;
-      }) || {};
-      var daily   = basic / workDays;
-      var absDed  = +(parseFloat(att.absent || 0) * daily).toFixed(2);
-      var lateDed = +(parseFloat(att.late   || 0) * (daily / 8)).toFixed(2);
-      var net     = +(gross - loanDed - extraDed - absDed - lateDed + arrears).toFixed(2);
+      var net = +(gross - loanDed - extraDed + arrears).toFixed(2);
 
       return {
         empId: emp.id, name: emp.name, dept: emp.dept,
-        basic, gross, loanDed, extraDed, absDed, lateDed, arrears, net
+        basic, gross, loanDed, extraDed, arrears, net
       };
     });
 
