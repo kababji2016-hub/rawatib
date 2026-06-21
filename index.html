@@ -800,10 +800,8 @@ function calcPayroll() {
     payrollCache = res.data;
     var currency = res.currency || 'ريال';
     var rows = deptF ? res.data.filter(function(r){ return r.dept === deptF; }) : res.data;
-    var total = rows.reduce(function(s,r){ return s+r.net; }, 0);
+    var total      = rows.reduce(function(s,r){ return s+r.net; }, 0);
     var totalGross = rows.reduce(function(s,r){ return s+r.gross; }, 0);
-    var totalDeds  = rows.reduce(function(s,r){ return s+r.gosi+r.loanDed+r.extraDed+r.absDed+r.lateDed; }, 0);
-
     var totalDeds  = rows.reduce(function(s,r){ return s+r.loanDed+r.extraDed+r.absDed+r.lateDed; }, 0);
     var html =
       '<div class="p-3 no-print">' +
