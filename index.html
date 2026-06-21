@@ -804,6 +804,7 @@ function calcPayroll() {
     var totalGross = rows.reduce(function(s,r){ return s+r.gross; }, 0);
     var totalDeds  = rows.reduce(function(s,r){ return s+r.gosi+r.loanDed+r.extraDed+r.absDed+r.lateDed; }, 0);
 
+    var totalDeds  = rows.reduce(function(s,r){ return s+r.loanDed+r.extraDed+r.absDed+r.lateDed; }, 0);
     var html =
       '<div class="p-3 no-print">' +
       '<div class="rpt-summary">' +
@@ -816,11 +817,9 @@ function calcPayroll() {
       '<table class="table table-bordered table-sm table-hover">' +
       '<thead class="table-dark"><tr>' +
         '<th>#</th><th>الموظف</th><th>الفرع</th><th>الإجمالي</th>' +
-        '<th class="text-danger">تأمينات</th>' +
-        '<th class="text-danger">قروض</th>' +
+        '<th class="text-danger">قروض/سلف</th>' +
         '<th class="text-danger">خصومات</th>' +
         '<th class="text-danger">غياب/تأخير</th>' +
-        '<th class="text-success">مكافآت</th>' +
         '<th class="text-success fw-bold">الصافي</th>' +
         '<th class="no-print">إيصال</th>' +
       '</tr></thead><tbody>' +
@@ -830,11 +829,9 @@ function calcPayroll() {
           '<td class="fw-semibold">'+esc(r.name)+'</td>'+
           '<td>'+esc(r.dept||'')+'</td>'+
           '<td>'+fmt(r.gross)+'</td>'+
-          '<td class="text-danger">'+fmt(r.gosi)+'</td>'+
           '<td class="text-danger">'+fmt(r.loanDed)+'</td>'+
           '<td class="text-danger">'+fmt(r.extraDed)+'</td>'+
           '<td class="text-danger">'+fmt(r.absDed + r.lateDed)+'</td>'+
-          '<td class="text-success">'+fmt(r.bonuses + r.arrears)+'</td>'+
           '<td class="fw-bold text-success">'+fmt(r.net)+' '+currency+'</td>'+
           '<td class="no-print"><button class="btn btn-sm btn-outline-primary" onclick="openPayslip(\''+r.empId+'\',\''+month+'\')">'+
           '<i class="fas fa-file-alt"></i></button></td>'+
@@ -843,11 +840,9 @@ function calcPayroll() {
       '</tbody><tfoot class="table-secondary fw-bold">' +
       '<tr><td colspan="3" class="text-end">الإجمالي</td>' +
       '<td>'+fmt(totalGross)+'</td>'+
-      '<td class="text-danger">'+fmt(rows.reduce(function(s,r){ return s+r.gosi;},0))+'</td>'+
       '<td class="text-danger">'+fmt(rows.reduce(function(s,r){ return s+r.loanDed;},0))+'</td>'+
       '<td class="text-danger">'+fmt(rows.reduce(function(s,r){ return s+r.extraDed;},0))+'</td>'+
       '<td class="text-danger">'+fmt(rows.reduce(function(s,r){ return s+r.absDed+r.lateDed;},0))+'</td>'+
-      '<td class="text-success">'+fmt(rows.reduce(function(s,r){ return s+r.bonuses+r.arrears;},0))+'</td>'+
       '<td class="text-success fw-bold fs-6">'+fmt(total)+' '+currency+'</td>'+
       '<td class="no-print"></td>'+
       '</tr>' +
