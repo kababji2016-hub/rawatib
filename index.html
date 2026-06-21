@@ -1106,25 +1106,63 @@ function renderRptDeds(month) {
 }
 
 // ============================================================
-//  CSV Exports
+//  Excel (.xlsx) Exports — SheetJS
 // ============================================================
-function exportCSV(headers, rows, filename) {
-  var bom='﻿', csv=bom+headers.join(',')+'\n'+rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-  var a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); a.download=filename+'.csv'; a.click();
+function exportXLSX(headers, rows, filename, sheetName) {
+  try {
+    var data = [headers].concat(rows.map(function(r){
+      return r.map(function(c){ return c === null || c === undefined ? '' : c; });
+    }));
+    var ws = XLSX.utils.aoa_to_sheet(data);
+
+    // Auto column width
+    var colWidths = headers.map(function(h, i){
+      var maxLen = String(h).length;
+      rows.forEach(function(r){ var v=String(r[i]||''); if(v.length>maxLen) maxLen=v.length; });
+      return { wch: Math.min(maxLen + 4, 40) };
+    });
+    ws['!cols'] = colWidths;
+
+    // Bold header row
+    var range = XLSX.utils.decode_range(ws['!ref']);
+    for (var C = range.s.c; C <= range.e.c; C++) {
+      var cellAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (!ws[cellAddr]) continue;
+      ws[cellAddr].s = { font: { bold: true }, fill: { fgColor: { rgb: 'D9E1F2' } } };
+    }
+
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName || 'بيانات');
+    XLSX.writeFile(wb, filename + '.xlsx');
+  } catch(e) {
+    toast('خطأ في التصدير: ' + e.message, 'danger');
+  }
 }
+
 function exportEmpCSV() {
-  exportCSV(['الاسم','رقم الهوية','الفرع','المسمى','الأساسي','الإجمالي','الحالة'],
-    DB.employees.map(function(e){return[e.name,e.natId,e.dept,e.pos,n(e.basic),n(e.basic)+n(e.housing)+n(e.transport)+n(e.phone)+n(e.other),e.status];}), 'موظفين');
+  exportXLSX(
+    ['الاسم','رقم الهوية','الفرع','المسمى الوظيفي','الراتب الأساسي','الإجمالي','الجنسية','الحالة'],
+    DB.employees.map(function(e){
+      return [e.name, e.natId, e.dept, e.pos,
+              n(e.basic),
+              n(e.basic)+n(e.housing)+n(e.transport)+n(e.phone)+n(e.other),
+              e.nationality||'', e.status];
+    }),
+    'موظفين', 'الموظفون'
+  );
 }
 function exportPayrollCSV() {
   if (!payrollCache.length) { toast('احسب المسيّر أولاً','warning'); return; }
-  var currency=DB.settings.currency||'ريال';
-  exportCSV(['الموظف','الفرع','الإجمالي','قروض/سلف','خصومات','الصافي ('+currency+')'],
-    payrollCache.map(function(r){return[r.name,r.dept,r.gross,r.loanDed,r.extraDed,r.net];}), 'مسير_رواتب');
+  var currency = DB.settings.currency||'ريال';
+  exportXLSX(
+    ['الموظف','الفرع','الإجمالي','قروض/سلف','خصومات إضافية','الصافي ('+currency+')'],
+    payrollCache.map(function(r){ return [r.name, r.dept, r.gross, r.loanDed, r.extraDed, r.net]; }),
+    'مسير_رواتب', 'مسيّر الرواتب'
+  );
 }
 function exportRptCSV() {
   if (!rptCache.length) { toast('اعرض التقرير أولاً','warning'); return; }
-  exportCSV(rptHeaders, rptCache, 'تقرير');
+  exportXLSX(rptHeaders, rptCache, 'تقرير', 'التقرير');
 }
 
 // ============================================================
