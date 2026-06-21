@@ -471,39 +471,6 @@ body { background:#f0f2f5; font-family:'Segoe UI',Tahoma,Arial,sans-serif; }
   </div>
 </div>
 
-<!-- Bonus Modal -->
-<div class="modal fade" id="bonModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header modal-header-dark">
-        <h5 class="modal-title">إضافة / تعديل مكافأة</h5>
-        <button type="button" class="btn-close modal-header-dark" data-bs-dismiss="modal"></button>
-      </div>
-      <form id="bonForm" onsubmit="doSaveBon(event)">
-        <div class="modal-body">
-          <input type="hidden" id="b_id">
-          <div class="mb-3"><label class="form-label">الموظف *</label><select class="form-select" id="b_empId" required></select></div>
-          <div class="mb-3"><label class="form-label">نوع المكافأة</label>
-            <select class="form-select" id="b_type">
-              <option value="performance">أداء</option><option value="annual">سنوية</option>
-              <option value="special">خاصة</option><option value="other">أخرى</option>
-            </select>
-          </div>
-          <div class="row g-3">
-            <div class="col-6"><label class="form-label">المبلغ *</label><input type="number" class="form-control" id="b_amount" required min="0"></div>
-            <div class="col-6"><label class="form-label">الشهر</label><input type="month" class="form-control" id="b_month"></div>
-          </div>
-          <div class="mt-3"><label class="form-label">البيان</label><input class="form-control" id="b_desc"></div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-          <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>حفظ</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
 <!-- Payslip Modal -->
 <div class="modal fade" id="payslipModal" tabindex="-1">
   <div class="modal-dialog modal-lg">
