@@ -1807,7 +1807,7 @@ function doSaveLoan(e) {
     date: date, reason: reason, status: val('l_status')
   };
   callServer('syncRecord',{sheet:'loans',record:rec,operation:'upsert'},function(res){
-    if (res&&res.success) { closeModal('loanModal'); toast('تم الحفظ بنجاح','success'); loadAll(); }
+    if (res&&res.success) { fbSet('loans', rec.id, rec); closeModal('loanModal'); toast('تم الحفظ بنجاح','success'); loadAll(); }
     else toast('خطأ: '+(res&&res.error),'danger');
   });
 }
