@@ -323,9 +323,8 @@ function jsonOut(obj) {
 function setupSpreadsheet() {
   var ss = SpreadsheetApp.openById(SHEET_ID);
   var extra = {
-    arrears:    ['id','empId','type','amount','months','date','desc','status'],
-    attendance: ['id','empId','month','present','absent','late','leaves','approved'],
-    settings:   ['key','value']
+    arrears:  ['id','empId','type','amount','months','date','desc','status'],
+    settings: ['key','value']
   };
   Object.keys(extra).forEach(function(name) {
     if (ss.getSheetByName(name)) return;
