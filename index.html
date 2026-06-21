@@ -1167,28 +1167,6 @@ function doSaveDed(e) {
   });
 }
 
-// ============================================================
-//  Bonus CRUD
-// ============================================================
-function openBonModal(bonId) {
-  fillEmpSelect('b_empId');
-  var bon = bonId ? DB.bonuses.find(function(b){ return String(b.id)===String(bonId); }) : null;
-  ['id','empId','type','amount','month','desc'].forEach(function(f){
-    setValue('b_'+f, bon ? (bon[f]||'') : (f==='month'?curMonth():''));
-  });
-  modal('bonModal');
-}
-function doSaveBon(e) {
-  e.preventDefault();
-  var rec = {
-    id:val('b_id')||('BON-'+Date.now()), empId:val('b_empId'), type:val('b_type'),
-    amount:+val('b_amount')||0, month:val('b_month'), desc:val('b_desc'), status:'active'
-  };
-  callServer('syncRecord', { sheet:'bonuses', record:rec, operation:'upsert' }, function(res){
-    if (res && res.success) { closeModal('bonModal'); toast('تم حفظ المكافأة', 'success'); loadAll(); }
-    else toast('خطأ: '+(res&&res.error), 'danger');
-  });
-}
 
 // ============================================================
 //  Delete
