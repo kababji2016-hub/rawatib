@@ -602,10 +602,10 @@ function renderDash() {
   var payrollTotal = active.reduce(function(s,e){ return s+n(e.basic)+n(e.housing)+n(e.transport)+n(e.phone)+n(e.other); }, 0);
   var now = new Date(), month = now.getFullYear()+'-'+pad(now.getMonth()+1);
   var deds = DB.deductions.filter(function(d){ return String(d.month||'').substring(0,7)===month; }).reduce(function(s,d){ return s+n(d.amount); },0);
-  setText('st-emp', active.length);
-  setText('st-pay', fmt(payrollTotal));
+  setText('st-emp',   active.length);
+  setText('st-pay',   fmt(payrollTotal));
   setText('st-loans', DB.loans.filter(function(l){ return String(l.status).toLowerCase()==='active'; }).length);
-  setText('st-ded', fmt(deds));
+  setText('st-ded',   fmt(deds));
   tbody('dashTbl', active.map(function(e){
     var g = n(e.basic)+n(e.housing)+n(e.transport)+n(e.phone)+n(e.other);
     return '<tr><td class="fw-semibold">'+esc(e.name)+'</td><td>'+esc(e.dept)+'</td><td>'+esc(e.pos)+'</td><td>'+fmt(e.basic)+'</td><td class="fw-bold text-success">'+fmt(g)+'</td></tr>';
