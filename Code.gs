@@ -265,7 +265,6 @@ function handleCalcPayroll(ss, payload) {
   if (!month) return { success: false, error: 'الشهر مطلوب' };
 
   var d        = handleGetAll(ss).data;
-  var gosiRate = parseFloat(d.settings.gosi    || 9)  / 100;
   var workDays = parseInt(d.settings.workDays  || 30);
   var currency = d.settings.currency || 'ريال';
 
@@ -278,7 +277,6 @@ function handleCalcPayroll(ss, payload) {
       var phone     = +emp.phone     || 0;
       var other     = +emp.other     || 0;
       var gross     = basic + housing + transport + phone + other;
-      var gosi      = +(basic * gosiRate).toFixed(2);
 
       var loanDed = d.loans
         .filter(function(l) {
@@ -295,13 +293,6 @@ function handleCalcPayroll(ss, payload) {
         })
         .reduce(function(s, x) { return s + (+x.amount || 0); }, 0);
 
-      var bonuses = d.bonuses
-        .filter(function(b) {
-          return String(b.empId) === String(emp.id) &&
-                 String(b.month || '').substring(0, 7) === month;
-        })
-        .reduce(function(s, b) { return s + (+b.amount || 0); }, 0);
-
       var arrears = d.arrears
         .filter(function(a) {
           return String(a.empId) === String(emp.id) && a.status === 'pending';
@@ -315,11 +306,11 @@ function handleCalcPayroll(ss, payload) {
       var daily   = basic / workDays;
       var absDed  = +(parseFloat(att.absent || 0) * daily).toFixed(2);
       var lateDed = +(parseFloat(att.late   || 0) * (daily / 8)).toFixed(2);
-      var net     = +(gross - gosi - loanDed - extraDed - absDed - lateDed + bonuses + arrears).toFixed(2);
+      var net     = +(gross - loanDed - extraDed - absDed - lateDed + arrears).toFixed(2);
 
       return {
         empId: emp.id, name: emp.name, dept: emp.dept,
-        basic, gross, gosi, loanDed, extraDed, absDed, lateDed, bonuses, arrears, net
+        basic, gross, loanDed, extraDed, absDed, lateDed, arrears, net
       };
     });
 
