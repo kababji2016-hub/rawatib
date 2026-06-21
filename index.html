@@ -944,9 +944,8 @@ function genReport() {
     return;
   }
 
-  if (type === 'loans') { renderRptLoans(month); return; }
+  if (type === 'loans')      { renderRptLoans(month); return; }
   if (type === 'deductions') { renderRptDeds(month); return; }
-  if (type === 'bonuses')    { renderRptBons(month); return; }
 }
 
 function renderRptPayroll(data, month, currency) {
