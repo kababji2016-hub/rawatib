@@ -851,6 +851,131 @@ input[type="month"].month-styled:focus {
 var DB  = { employees:[], loans:[], deductions:[], arrears:[], settings:{} };
 var API = localStorage.getItem('apiUrl') || 'https://script.google.com/macros/s/AKfycbxA3xQtw4klM0zOJf-dRM2YPPh_hwpXCoeIXBlVVczsQC-zQfMz5aE70uCwsVsdJjzj/exec';
 var isGAS = (typeof google !== 'undefined' && typeof google.script !== 'undefined');
+
+// ============================================================
+//  Firebase / Firestore
+// ============================================================
+var fbApp, fbDB, fbUnsubscribes = [];
+
+(function initFirebase() {
+  try {
+    fbApp = firebase.initializeApp({
+      apiKey:            "AIzaSyCnFF-JuLhMr1awTkn3eM2tnm-NrBp0UGg",
+      authDomain:        "cash-register-app-b43fd.firebaseapp.com",
+      projectId:         "cash-register-app-b43fd",
+      storageBucket:     "cash-register-app-b43fd.firebasestorage.app",
+      messagingSenderId: "856646642050",
+      appId:             "1:856646642050:web:a22e9922f6b5a7c264479b"
+    });
+    fbDB = firebase.firestore();
+    setFbStatus('connected');
+  } catch(e) {
+    console.warn('Firebase init error:', e);
+    setFbStatus('error');
+  }
+})();
+
+function setFbStatus(state) {
+  var el = document.getElementById('fbStatus');
+  if (!el) return;
+  if (state === 'connected') {
+    el.innerHTML = '<i class="fas fa-circle" style="color:#22c55e;font-size:8px"></i> Firebase';
+    el.title = 'متصل بـ Firebase — التحديث الفوري نشط';
+  } else if (state === 'syncing') {
+    el.innerHTML = '<i class="fas fa-circle" style="color:#fbbf24;font-size:8px"></i> جاري...';
+  } else {
+    el.innerHTML = '<i class="fas fa-circle" style="color:#ef4444;font-size:8px"></i> Firebase';
+    el.title = 'لم يتصل بـ Firebase';
+  }
+}
+
+// Write one record to Firestore
+function fbSet(collection, id, data) {
+  if (!fbDB) return;
+  try {
+    fbDB.collection(collection).doc(String(id)).set(data, { merge: true });
+  } catch(e) { console.warn('fbSet error', e); }
+}
+
+// Delete one record from Firestore
+function fbDelete(collection, id) {
+  if (!fbDB) return;
+  try {
+    fbDB.collection(collection).doc(String(id)).delete();
+  } catch(e) { console.warn('fbDelete error', e); }
+}
+
+// Sync full collection from Firestore to DB array
+function fbLoadCollection(col, cb) {
+  if (!fbDB) { cb([]); return; }
+  fbDB.collection(col).get().then(function(snap) {
+    var items = [];
+    snap.forEach(function(doc) { items.push(Object.assign({ id: doc.id }, doc.data())); });
+    cb(items);
+  }).catch(function(e) { console.warn('fbLoad error', col, e); cb([]); });
+}
+
+// Load all data from Firestore, fallback to GAS if empty
+function loadFromFirebase(cb) {
+  if (!fbDB) { cb(false); return; }
+  var done = 0, results = {};
+  var cols = ['employees','loans','deductions'];
+  cols.forEach(function(col) {
+    fbLoadCollection(col, function(items) {
+      results[col] = items;
+      if (++done === cols.length) {
+        // If Firebase is empty (first run), signal to fallback to GAS
+        var total = cols.reduce(function(s,c){ return s + results[c].length; }, 0);
+        if (total === 0) { cb(false); return; }
+        DB.employees  = results.employees;
+        DB.loans      = results.loans;
+        DB.deductions = results.deductions;
+        cb(true);
+      }
+    });
+  });
+}
+
+// Real-time listener — rerenders when another user changes data
+function startRealtimeListeners() {
+  if (!fbDB) return;
+  // Cancel previous listeners
+  fbUnsubscribes.forEach(function(u){ try{ u(); }catch(e){} });
+  fbUnsubscribes = [];
+
+  var cols = ['employees','loans','deductions'];
+  cols.forEach(function(col) {
+    var unsub = fbDB.collection(col).onSnapshot(function(snap) {
+      var items = [];
+      snap.forEach(function(doc){ items.push(Object.assign({ id: doc.id }, doc.data())); });
+      DB[col] = items;
+      buildDeptFilters();
+      renderAll();
+      // Show live-update toast briefly
+      showLiveToast();
+    }, function(err){ console.warn('snapshot error', col, err); });
+    fbUnsubscribes.push(unsub);
+  });
+}
+
+var _liveToastTimer;
+function showLiveToast() {
+  var el = document.getElementById('liveUpdateBadge');
+  if (!el) return;
+  el.style.opacity = '1';
+  clearTimeout(_liveToastTimer);
+  _liveToastTimer = setTimeout(function(){ el.style.opacity = '0'; }, 2000);
+}
+
+// Seed all data from GAS → Firebase (runs once when Firebase is empty)
+function seedFirebaseFromGAS() {
+  var cols = ['employees','loans','deductions'];
+  cols.forEach(function(col) {
+    DB[col].forEach(function(rec) {
+      if (rec.id) fbSet(col, rec.id, rec);
+    });
+  });
+}
 var payrollCache = [];
 var payslipsCache = [];        // full result from last calcPayslips call
 var rptCache = [], rptHeaders = [];
