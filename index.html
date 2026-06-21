@@ -745,25 +745,6 @@ function filterDeds() {
   renderDeds(rows);
 }
 
-function filterBons() {
-  var q    = document.getElementById('bonSearch').value.toLowerCase();
-  var mth  = document.getElementById('bonMonthFilter').value;
-  var dept = document.getElementById('bonDeptFilter').value;
-  var rows = DB.bonuses.filter(function(b){
-    if (mth  && String(b.month||'').substring(0,7) !== mth) return false;
-    if (dept) {
-      var emp = findEmp(b.empId);
-      if (!emp || emp.dept !== dept) return false;
-    }
-    if (q) {
-      var emp2 = findEmp(b.empId);
-      var name = emp2 ? emp2.name : '';
-      if (!name.toLowerCase().includes(q)) return false;
-    }
-    return true;
-  });
-  renderBons(rows);
-}
 
 // ============================================================
 //  Payroll
