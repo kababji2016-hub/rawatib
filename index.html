@@ -1017,7 +1017,8 @@ function printOnePayslip(empId, month) {
     '.ps-footer{display:flex;justify-content:space-between;font-size:12px;margin-top:5px}';
   var win = window.open('','_blank');
   win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>إيصال راتب</title><style>'+css+'</style></head><body>'+html+'</body></html>');
-  win.document.close(); win.print();
+  win.document.close();
+  win.onload = function(){ win.print(); };
 }
 
 function fmtMonthAr(m) {
