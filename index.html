@@ -160,6 +160,31 @@ body {
   font-size:13px;
 }
 
+/* ========== Custom Buttons ========== */
+.btn-excel  { background:#217346; color:#fff; border-color:#1a5c38; }
+.btn-excel:hover  { background:#1a5c38; color:#fff; border-color:#14472c; }
+.btn-excel:active { background:#14472c; color:#fff; }
+[data-theme="dark"] .btn-excel { background:#1d6b42; border-color:#17573a; }
+
+.btn-print  { background:#6c5ce7; color:#fff; border-color:#5a4bd1; }
+.btn-print:hover  { background:#5a4bd1; color:#fff; border-color:#4a3dc2; }
+.btn-print:active { background:#4a3dc2; color:#fff; }
+
+.btn-calc   { background:#0288d1; color:#fff; border-color:#0277b8; font-weight:600; }
+.btn-calc:hover   { background:#0277b8; color:#fff; }
+
+/* Month input styling */
+input[type="month"].month-styled {
+  background:var(--surface2); color:var(--text);
+  border:2px solid var(--accent); border-radius:8px;
+  padding:.3rem .7rem; font-weight:600;
+  min-width:155px; cursor:pointer;
+}
+input[type="month"].month-styled:focus {
+  outline:none; border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(30,136,229,.2);
+}
+
 /* ========== Loading ========== */
 #loadingScreen { text-align:center; padding:4rem 2rem; color:var(--text3); }
 
