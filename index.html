@@ -301,8 +301,8 @@ body {
       <h4><i class="fas fa-receipt me-2"></i>قسائم الرواتب</h4>
       <div class="d-flex gap-2 flex-wrap no-print">
         <input type="month" id="psMonth" class="form-control form-control-sm">
-        <select class="form-select form-select-sm" style="max-width:160px" id="psDeptFilter"><option value="">كل الفروع</option></select>
-        <input type="text" class="form-control form-control-sm" style="max-width:180px" id="psSearch" placeholder="بحث بالاسم...">
+        <select class="form-select form-select-sm" style="max-width:160px" id="psDeptFilter" onchange="renderPayslipsGrid()"><option value="">كل الفروع</option></select>
+        <input type="text" class="form-control form-control-sm" style="max-width:200px" id="psSearch" placeholder="&#xf002; بحث بالاسم..." oninput="renderPayslipsGrid()">
         <button class="btn btn-primary btn-sm" onclick="calcPayslips()"><i class="fas fa-calculator me-1"></i>احتساب</button>
         <button class="btn btn-outline-secondary btn-sm" onclick="printAllPayslips()"><i class="fas fa-print me-1"></i>طباعة الكل</button>
       </div>
