@@ -949,8 +949,8 @@ function genReport() {
 }
 
 function renderRptPayroll(data, month, currency) {
-  rptHeaders = ['الموظف','الفرع','الإجمالي','التأمينات','القروض','الخصومات','غياب/تأخير','مكافآت','الصافي'];
-  rptCache   = data.map(function(r){ return [r.name, r.dept, r.gross, r.gosi, r.loanDed, r.extraDed, r.absDed+r.lateDed, r.bonuses+r.arrears, r.net]; });
+  rptHeaders = ['الموظف','الفرع','الإجمالي','قروض/سلف','خصومات','غياب/تأخير','الصافي'];
+  rptCache   = data.map(function(r){ return [r.name, r.dept, r.gross, r.loanDed, r.extraDed, r.absDed+r.lateDed, r.net]; });
   var total  = data.reduce(function(s,r){ return s+r.net; },0);
   var html =
     '<div class="card-box-header"><span><i class="fas fa-file-invoice-dollar me-2"></i>مسيّر الرواتب — '+month+'</span></div>'+
