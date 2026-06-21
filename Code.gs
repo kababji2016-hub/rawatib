@@ -279,22 +279,28 @@ function handleCalcPayroll(ss, payload) {
 
       var loanDed = d.loans
         .filter(function(l) {
-          return String(l.empId) === String(emp.id) &&
-                 String(l.status).toLowerCase() === 'active';
+          if (String(l.empId) !== String(emp.id)) return false;
+          var st = String(l.status || '').trim();
+          // Accept Arabic "نشط" or English "active" — reject settled/مسدد
+          return st === 'active' || st === 'نشط' ||
+                 (st !== 'settled' && st !== 'مسدد' && st !== 'مسدّد' && st !== '');
         })
         .reduce(function(s, l) { return s + (+l.monthly || 0); }, 0);
 
       var extraDed = d.deductions
         .filter(function(x) {
           if (String(x.empId) !== String(emp.id)) return false;
-          if (x.status === 'recurring') return true;
+          var st = String(x.status || '').trim();
+          if (st === 'recurring' || st === 'متكرر' || st === 'متكرر شهرياً') return true;
           return String(x.month || '').substring(0, 7) === month;
         })
         .reduce(function(s, x) { return s + (+x.amount || 0); }, 0);
 
       var arrears = d.arrears
         .filter(function(a) {
-          return String(a.empId) === String(emp.id) && a.status === 'pending';
+          var st = String(a.status || '').trim();
+          return String(a.empId) === String(emp.id) &&
+                 (st === 'pending' || st === 'معلق' || st === 'معلّق');
         })
         .reduce(function(s, a) { return s + (+a.amount || 0); }, 0);
 
