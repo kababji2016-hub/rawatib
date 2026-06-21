@@ -895,8 +895,7 @@ function openPayslip(empId, month) {
     '<table class="ps-table">' +
       '<thead><tr><th colspan="2">الخصومات</th></tr></thead>' +
       '<tbody>' +
-        (row.gosi?'<tr><td>التأمينات الاجتماعية</td><td class="text-end text-danger">'+fmt(row.gosi)+' '+currency+'</td></tr>':'')+
-        (row.loanDed?'<tr><td>أقساط القروض</td><td class="text-end text-danger">'+fmt(row.loanDed)+' '+currency+'</td></tr>':'')+
+        (row.loanDed?'<tr><td>أقساط القروض والسلف</td><td class="text-end text-danger">'+fmt(row.loanDed)+' '+currency+'</td></tr>':'')+
         (row.extraDed?'<tr><td>خصومات متنوعة</td><td class="text-end text-danger">'+fmt(row.extraDed)+' '+currency+'</td></tr>':'')+
         (row.absDed?'<tr><td>خصم الغياب</td><td class="text-end text-danger">'+fmt(row.absDed)+' '+currency+'</td></tr>':'')+
         (row.lateDed?'<tr><td>خصم التأخير</td><td class="text-end text-danger">'+fmt(row.lateDed)+' '+currency+'</td></tr>':'')+
