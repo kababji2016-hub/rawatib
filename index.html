@@ -895,45 +895,65 @@ function printAllPayslips() {
 function openPayslip(empId, month) {
   var emp = findEmp(empId);
   var row = payrollCache.find(function(r){ return String(r.empId)===String(empId); });
-  if (!emp || !row) { toast('بيانات الموظف غير متاحة','warning'); return; }
+  if (!row) { toast('احسب المسيّر أولاً','warning'); return; }
+  if (!emp) emp = {};
   var currency = DB.settings.currency||'ريال';
-  var company  = DB.settings.company||'الشركة';
-  document.getElementById('payslipBody').innerHTML = buildPayslipHTML(row, month, currency, company, emp);
+  var company  = DB.settings.company||'نظام الرواتب';
+  document.getElementById('payslipBody').innerHTML = buildReceiptHTML(row, month, currency, company, emp);
   modal('payslipModal');
 }
 
-function buildPayslipHTML(row, month, currency, company, emp) {
+function buildReceiptHTML(row, month, currency, company, emp) {
   if (!emp) emp = findEmp(row.empId) || {};
   var totalDed = row.loanDed + row.extraDed;
-  return '<div id="payslipBody">'+
-    '<div class="ps-header"><h3>'+esc(company)+'</h3><p>إيصال استلام الراتب</p><p style="font-size:.78rem;color:#999">'+month+'</p></div>'+
-    '<div class="ps-meta">'+
-      '<div class="lbl">الاسم:</div><div class="val">'+esc(row.name)+'</div>'+
-      '<div class="lbl">رقم الموظف:</div><div class="val">'+esc(String(row.empId))+'</div>'+
-      '<div class="lbl">الفرع / القسم:</div><div class="val">'+esc(row.dept||'—')+'</div>'+
-      '<div class="lbl">المسمى الوظيفي:</div><div class="val">'+esc(emp.pos||'—')+'</div>'+
-      '<div class="lbl">رقم الهوية:</div><div class="val">'+esc(emp.natId||'—')+'</div>'+
-      '<div class="lbl">الآيبان:</div><div class="val">'+esc(emp.iban||'—')+'</div>'+
+  // format month label e.g. "2026-06" → "يونيو 2026 م"
+  var monthLabel = fmtMonthAr(month);
+  // today date Arabic
+  var today = new Date().toLocaleDateString('ar-SA',{day:'numeric',month:'long',year:'numeric'});
+  var dash = '—';
+  return '<div class="ps-receipt">'+
+    '<div class="ps-co-name">'+esc(company)+'</div>'+
+    '<div class="ps-title">إيصال استلام راتب شهر : '+monthLabel+'</div>'+
+    '<div class="ps-info">'+
+      '<div class="ps-info-col">'+
+        '<span><strong>الاسم:</strong> '+esc(row.name)+'</span>'+
+        '<span><strong>المسمى:</strong> '+esc(emp.pos||'عامل')+'</span>'+
+      '</div>'+
+      '<div class="ps-info-col" style="text-align:left;direction:ltr">'+
+        '<span><strong>الهوية:</strong> '+esc(emp.natId||dash)+'</span>'+
+        '<span><strong>الفرع:</strong> '+esc(row.dept||dash)+'</span>'+
+      '</div>'+
     '</div>'+
-    '<div class="ps-tables">'+
-      '<div><table class="ps-tbl"><thead><tr><th colspan="2">المستحقات</th></tr></thead><tbody>'+
-        '<tr><td>الراتب الأساسي</td><td class="text-end">'+fmt(n(emp.basic||row.basic))+'</td></tr>'+
-        (n(emp.housing)?'<tr><td>بدل السكن</td><td class="text-end">'+fmt(emp.housing)+'</td></tr>':'')+
-        (n(emp.transport)?'<tr><td>بدل المواصلات</td><td class="text-end">'+fmt(emp.transport)+'</td></tr>':'')+
-        (n(emp.phone)?'<tr><td>بدل الهاتف</td><td class="text-end">'+fmt(emp.phone)+'</td></tr>':'')+
-        (n(emp.other)?'<tr><td>بدلات أخرى</td><td class="text-end">'+fmt(emp.other)+'</td></tr>':'')+
-        (row.arrears?'<tr><td>مستحقات سابقة</td><td class="text-end">'+fmt(row.arrears)+'</td></tr>':'')+
-        '<tr class="tot"><td>الإجمالي</td><td class="text-end" style="color:green">'+fmt(row.gross + (row.arrears||0))+' '+currency+'</td></tr>'+
-      '</tbody></table></div>'+
-      '<div><table class="ps-tbl"><thead><tr><th colspan="2">الخصومات</th></tr></thead><tbody>'+
-        (row.loanDed?'<tr><td>أقساط القروض والسلف</td><td class="text-end" style="color:#c62828">'+fmt(row.loanDed)+'</td></tr>':'')+
-        (row.extraDed?'<tr><td>خصومات متنوعة</td><td class="text-end" style="color:#c62828">'+fmt(row.extraDed)+'</td></tr>':'')+
-        '<tr class="tot"><td>إجمالي الخصومات</td><td class="text-end" style="color:#c62828">'+fmt(totalDed)+' '+currency+'</td></tr>'+
-      '</tbody></table></div>'+
+    '<table>'+
+      '<thead><tr>'+
+        '<th>الراتب</th>'+
+        '<th>السلف</th>'+
+        '<th>الخصومات</th>'+
+        '<th>مجموع الخصم</th>'+
+        '<th>صافي الراتب</th>'+
+      '</tr></thead>'+
+      '<tbody><tr>'+
+        '<td>'+fmt(row.gross)+'</td>'+
+        '<td>'+(row.loanDed?fmt(row.loanDed):dash)+'</td>'+
+        '<td>'+(row.extraDed?fmt(row.extraDed):dash)+'</td>'+
+        '<td>'+(totalDed?fmt(totalDed):dash)+'</td>'+
+        '<td>'+fmt(row.net)+'</td>'+
+      '</tr></tbody>'+
+    '</table>'+
+    '<div class="ps-footer">'+
+      '<span>تاريخ الاستلام: '+today+'</span>'+
+      '<span>توقيع المستلم: ____________________</span>'+
     '</div>'+
-    '<div class="ps-net"><div class="lbl">صافي الراتب المستحق</div><div class="amt">'+fmt(row.net)+' '+currency+'</div></div>'+
-    '<div class="ps-sigs"><div class="sig">توقيع الموظف<br><small>'+esc(row.name)+'</small></div><div class="sig">توقيع المسؤول المالي</div></div>'+
   '</div>';
+}
+
+function fmtMonthAr(m) {
+  if (!m) return '';
+  var parts = String(m).split('-');
+  if (parts.length < 2) return m;
+  var months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var idx = parseInt(parts[1],10)-1;
+  return (months[idx]||parts[1])+' '+parts[0]+' م';
 }
 
 // ============================================================
