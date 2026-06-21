@@ -161,11 +161,17 @@ body {
 
 /* ========== Print ========== */
 @media print {
-  .sidebar, .no-print, .modal-footer, nav, .filter-bar { display:none!important; }
-  .main { margin:0; padding:0; }
+  .sidebar, .no-print, .modal-footer, .modal-header, nav, .filter-bar,
+  .modal-backdrop, .page-header { display:none!important; }
+  .main { margin:0!important; padding:0!important; }
   .card-box { box-shadow:none; border:none; }
-  body { background:#fff; font-size:12px; color:#000; }
-  #payslipBody { padding:.5rem; }
+  body { background:#fff!important; font-size:12px; color:#000!important; }
+  .modal { position:static!important; display:block!important; }
+  .modal-dialog { max-width:none!important; margin:0!important; }
+  .modal-content { border:none!important; box-shadow:none!important; }
+  .modal-body { padding:.5rem!important; background:#fff!important; }
+  .ps-receipt { border:2px solid #000!important; background:#fff!important; color:#000!important; }
+  .ps-cut::after { border-top:1px dashed #555!important; }
 }
 </style>
 </head>
