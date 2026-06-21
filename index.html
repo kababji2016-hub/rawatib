@@ -1077,8 +1077,8 @@ function exportPayrollCSV() {
   if (!payrollCache.length) { toast('احسب المسيّر أولاً', 'warning'); return; }
   var currency = DB.settings.currency || 'ريال';
   exportCSV(
-    ['الموظف','الفرع','الإجمالي','التأمينات','القروض','الخصومات','غياب/تأخير','مكافآت','الصافي ('+currency+')'],
-    payrollCache.map(function(r){ return [r.name, r.dept, r.gross, r.gosi, r.loanDed, r.extraDed, r.absDed+r.lateDed, r.bonuses+r.arrears, r.net]; }),
+    ['الموظف','الفرع','الإجمالي','قروض/سلف','خصومات','غياب/تأخير','الصافي ('+currency+')'],
+    payrollCache.map(function(r){ return [r.name, r.dept, r.gross, r.loanDed, r.extraDed, r.absDed+r.lateDed, r.net]; }),
     'مسير_رواتب'
   );
 }
