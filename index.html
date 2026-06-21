@@ -830,73 +830,112 @@ function calcPayroll() {
 //  Payslips Section
 // ============================================================
 function calcPayslips() {
-  var month=val('psMonth'), deptF=val('psDeptFilter'), q=val('psSearch').toLowerCase();
+  var month = val('psMonth');
   if (!month) { toast('اختر الشهر أولاً','warning'); return; }
   document.getElementById('payslipsGrid').innerHTML='<div class="col-12 text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
   callServer('calcPayroll',{month:month},function(res){
     if (!res||!res.success) { toast('خطأ: '+(res&&res.error),'danger'); return; }
-    payrollCache = res.data;
+    payrollCache      = res.data;
+    payslipsCache     = res.data;       // keep full list for filtering
     currentPayslipMonth = month;
-    var currency = res.currency||'ريال';
-    var rows = res.data;
-    if (deptF) rows = rows.filter(function(r){ return r.dept===deptF; });
-    if (q)     rows = rows.filter(function(r){ return (r.name||'').toLowerCase().includes(q); });
-    if (!rows.length) { document.getElementById('payslipsGrid').innerHTML='<div class="col-12 text-center py-4" style="color:var(--text3)">لا توجد نتائج</div>'; return; }
-    document.getElementById('payslipsGrid').innerHTML = rows.map(function(r){
-      var totalDed = r.loanDed + r.extraDed;
-      return '<div class="col-sm-6 col-md-4 col-lg-3">'+
-        '<div class="ps-card" onclick="openPayslip(\''+r.empId+'\',\''+month+'\')">'+
-          '<div class="ps-name">'+esc(r.name)+'</div>'+
-          '<div class="ps-dept">'+esc(r.dept||'—')+'</div>'+
-          '<div class="d-flex justify-content-between align-items-end">'+
-            '<div>'+
-              '<div style="font-size:.73rem;color:var(--text3)">الإجمالي: '+fmt(r.gross)+'</div>'+
-              '<div class="ps-deductions">خصومات: -'+fmt(totalDed)+'</div>'+
-            '</div>'+
-            '<div class="text-end">'+
-              '<div style="font-size:.7rem;color:var(--text3)">الصافي</div>'+
-              '<div class="ps-net">'+fmt(r.net)+'</div>'+
-              '<div style="font-size:.68rem;color:var(--text3)">'+currency+'</div>'+
-            '</div>'+
-          '</div>'+
-          '<div class="mt-2 d-flex gap-1 no-print">'+
-            '<button class="btn btn-sm btn-outline-primary w-50" onclick="event.stopPropagation();openPayslip(\''+r.empId+'\',\''+month+'\')"><i class="fas fa-eye me-1"></i>عرض</button>'+
-            '<button class="btn btn-sm btn-outline-secondary w-50" onclick="event.stopPropagation();printOnePayslip(\''+r.empId+'\',\''+month+'\')"><i class="fas fa-print me-1"></i>طباعة</button>'+
-          '</div>'+
-        '</div></div>';
-    }).join('');
+    renderPayslipsGrid();
   });
 }
 
+function renderPayslipsGrid() {
+  var month  = currentPayslipMonth;
+  var deptF  = val('psDeptFilter');
+  var q      = val('psSearch').toLowerCase().trim();
+  var currency = DB.settings.currency||'ريال';
+
+  if (!payslipsCache.length) return;
+
+  var rows = payslipsCache;
+  if (deptF) rows = rows.filter(function(r){ return r.dept===deptF; });
+  if (q)     rows = rows.filter(function(r){ return (r.name||'').toLowerCase().includes(q); });
+
+  if (!rows.length) {
+    document.getElementById('payslipsGrid').innerHTML='<div class="col-12 text-center py-4" style="color:var(--text3)">لا توجد نتائج</div>';
+    return;
+  }
+
+  document.getElementById('payslipsGrid').innerHTML = rows.map(function(r){
+    var totalDed = r.loanDed + r.extraDed;
+    return '<div class="col-sm-6 col-md-4 col-lg-3">'+
+      '<div class="ps-card" onclick="openPayslip(\''+r.empId+'\',\''+month+'\')">'+
+        '<div class="ps-name">'+esc(r.name)+'</div>'+
+        '<div class="ps-dept">'+esc(r.dept||'—')+'</div>'+
+        '<div class="d-flex justify-content-between align-items-end mt-2">'+
+          '<div>'+
+            '<div style="font-size:.73rem;color:var(--text3)">الإجمالي: '+fmt(r.gross)+'</div>'+
+            '<div class="ps-deductions">خصومات: -'+fmt(totalDed)+'</div>'+
+          '</div>'+
+          '<div class="text-end">'+
+            '<div style="font-size:.7rem;color:var(--text3)">الصافي</div>'+
+            '<div class="ps-net">'+fmt(r.net)+'</div>'+
+            '<div style="font-size:.68rem;color:var(--text3)">'+currency+'</div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="mt-2 d-flex gap-1 no-print">'+
+          '<button class="btn btn-sm btn-outline-primary w-50" onclick="event.stopPropagation();openPayslip(\''+r.empId+'\',\''+month+'\')"><i class="fas fa-eye me-1"></i>عرض</button>'+
+          '<button class="btn btn-sm btn-outline-secondary w-50" onclick="event.stopPropagation();printOnePayslip(\''+r.empId+'\',\''+month+'\')"><i class="fas fa-print me-1"></i>طباعة</button>'+
+        '</div>'+
+      '</div></div>';
+  }).join('');
+}
+
 function printAllPayslips() {
-  if (!payrollCache.length || !currentPayslipMonth) { toast('احسب القسائم أولاً','warning'); return; }
+  if (!payslipsCache.length || !currentPayslipMonth) { toast('احسب القسائم أولاً','warning'); return; }
   var currency = DB.settings.currency||'ريال';
   var company  = DB.settings.company||'نظام الرواتب';
   var month    = currentPayslipMonth;
   var deptF    = val('psDeptFilter');
-  var rows     = deptF ? payrollCache.filter(function(r){ return r.dept===deptF; }) : payrollCache;
+  var q        = val('psSearch').toLowerCase().trim();
 
-  var cutLine  = '<div class="ps-cut">&#9986;</div>';
-  var allHtml  = rows.map(function(r){ return buildReceiptHTML(r, month, currency, company); }).join(cutLine);
+  var rows = payslipsCache;
+  if (deptF) rows = rows.filter(function(r){ return r.dept===deptF; });
+  if (q)     rows = rows.filter(function(r){ return (r.name||'').toLowerCase().includes(q); });
 
+  if (!rows.length) { toast('لا توجد قسائم لطباعتها','warning'); return; }
+
+  // Group rows into pages of 4
+  var pages = [];
+  for (var i=0; i<rows.length; i+=4) { pages.push(rows.slice(i, i+4)); }
+
+  var CUT = '<div class="ps-cut"><span>&#9986;</span></div>';
+
+  var pagesHtml = pages.map(function(page){
+    // Each page: 4 slots, cut line between them (not after last)
+    var slots = page.map(function(r, idx){
+      return buildReceiptHTML(r, month, currency, company) +
+             (idx < page.length-1 ? CUT : '');
+    }).join('');
+    return '<div class="ps-page">'+slots+'</div>';
+  }).join('');
+
+  // A4: 297mm tall, @page margin 8mm → usable 281mm
+  // 4 slots × (receipt ~66mm + cut ~4mm) = 280mm ✓
   var css =
+    '@page{size:A4 portrait;margin:8mm}'+
     '*{box-sizing:border-box;margin:0;padding:0}'+
-    'body{font-family:"Cairo",Arial,sans-serif;direction:rtl;background:#fff;color:#000;font-size:13px;padding:10px}'+
-    '.ps-receipt{border:2px solid #000;padding:10px 14px 8px;max-width:720px;margin:0 auto 0}'+
-    '.ps-co-name{text-align:center;font-size:16px;font-weight:700;margin-bottom:2px}'+
-    '.ps-title{text-align:center;font-size:13px;margin-bottom:7px}'+
-    '.ps-info{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px}'+
-    '.ps-info-col{display:flex;flex-direction:column;gap:2px}'+
-    'table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:6px}'+
-    'th,td{border:1px solid #000;padding:5px 8px;text-align:center}'+
-    'th{background:#e8e8e8;font-weight:700}td{font-weight:700}'+
-    '.ps-footer{display:flex;justify-content:space-between;font-size:12px;margin-top:5px}'+
-    '.ps-cut{display:flex;align-items:center;gap:4px;margin:6px auto;max-width:720px;color:#555;font-size:14px}'+
-    '.ps-cut::after{content:"";flex:1;border-top:1px dashed #888}';
+    'body{font-family:"Cairo",Arial,sans-serif;direction:rtl;background:#fff;color:#000;font-size:11.5px}'+
+    '.ps-page{height:281mm;display:flex;flex-direction:column;page-break-after:always;overflow:hidden}'+
+    '.ps-receipt{flex:1;border:1.5px solid #000;padding:6px 12px 5px;display:flex;flex-direction:column;justify-content:space-between;min-height:0}'+
+    '.ps-co-name{text-align:center;font-size:14.5px;font-weight:700;margin-bottom:1px}'+
+    '.ps-title{text-align:center;font-size:11.5px;margin-bottom:5px}'+
+    '.ps-info{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:4px}'+
+    '.ps-info-col{display:flex;flex-direction:column;gap:1px}'+
+    'table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:4px}'+
+    'th,td{border:1px solid #000;padding:4px 7px;text-align:center}'+
+    'th{background:#e0e0e0;font-weight:700}td{font-weight:700}'+
+    '.ps-footer{display:flex;justify-content:space-between;font-size:11px}'+
+    '.ps-cut{height:16px;display:flex;align-items:center;gap:5px;color:#444;font-size:14px;padding:0 2px;flex-shrink:0}'+
+    '.ps-cut::after{content:"";flex:1;border-top:1.5px dashed #777}';
 
   var win = window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>قسائم الرواتب</title><style>'+css+'</style></head><body>'+allHtml+'</body></html>');
-  win.document.close(); win.print();
+  win.document.write('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>قسائم الرواتب</title><style>'+css+'</style></head><body>'+pagesHtml+'</body></html>');
+  win.document.close();
+  win.onload = function(){ win.print(); };
 }
 
 // ============================================================
