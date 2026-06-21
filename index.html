@@ -992,25 +992,6 @@ function renderRptDeds(month) {
   document.getElementById('rptResult').innerHTML = html;
 }
 
-function renderRptBons(month) {
-  var rows = month
-    ? DB.bonuses.filter(function(b){ return String(b.month||'').substring(0,7) === month; })
-    : DB.bonuses;
-  rptHeaders = ['الموظف','الفرع','النوع','المبلغ','الشهر','البيان'];
-  rptCache   = rows.map(function(b) {
-    var emp = findEmp(b.empId);
-    return [ emp?emp.name:b.empId, emp?emp.dept:'', b.type, b.amount, fmtMonth(b.month), b.desc||'' ];
-  });
-  var total = rows.reduce(function(s,b){ return s+n(b.amount);},0);
-  var html =
-    '<div class="card-box-header"><span><i class="fas fa-gift me-2"></i>كشف المكافآت'+(month?' — '+month:'')+'</span></div>'+
-    '<div class="table-responsive p-3"><table class="table table-bordered table-sm">' +
-    '<thead class="table-dark"><tr>'+rptHeaders.map(function(h){ return '<th>'+h+'</th>'; }).join('')+'</tr></thead><tbody>' +
-    rptCache.map(function(r){ return '<tr>'+r.map(function(c){ return '<td>'+esc(String(c||''))+'</td>';}).join('')+'</tr>'; }).join('') +
-    '</tbody><tfoot class="table-secondary fw-bold"><tr><td colspan="3" class="text-end">الإجمالي</td>' +
-    '<td colspan="3">'+fmt(total)+'</td></tr></tfoot></table></div>';
-  document.getElementById('rptResult').innerHTML = html;
-}
 
 // ============================================================
 //  CSV Exports
