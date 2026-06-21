@@ -859,7 +859,7 @@ function openPayslip(empId, month) {
   var currency = DB.settings.currency || 'ريال';
   var company  = DB.settings.company  || 'الشركة';
   var gross    = row.gross;
-  var totalDed = row.gosi + row.loanDed + row.extraDed + row.absDed + row.lateDed;
+  var totalDed = row.loanDed + row.extraDed + row.absDed + row.lateDed;
 
   var html =
     '<div id="payslipBody">' +
