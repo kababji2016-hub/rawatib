@@ -1739,6 +1739,13 @@ function updateDedDailyInfo() {
   }
 }
 
+function onDedAbsDateChange() {
+  var absDate = val('d_absDate');
+  if (absDate && absDate.length >= 7) {
+    setValue('d_month', absDate.substring(0,7));
+  }
+}
+
 function onDedDaysChange() {
   var days  = parseFloat(val('d_days')) || 0;
   var empId = val('d_empId');
