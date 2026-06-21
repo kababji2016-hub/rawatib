@@ -281,11 +281,16 @@ function handleCalcPayroll(ss, payload) {
         .filter(function(l) {
           if (String(l.empId) !== String(emp.id)) return false;
           var st = String(l.status || '').trim();
-          // Accept Arabic "نشط" or English "active" — reject settled/مسدد
-          return st === 'active' || st === 'نشط' ||
-                 (st !== 'settled' && st !== 'مسدد' && st !== 'مسدّد' && st !== '');
+          return st !== 'settled' && st !== 'مسدد' && st !== 'مسدّد' && st !== '';
         })
-        .reduce(function(s, l) { return s + (+l.monthly || 0); }, 0);
+        .reduce(function(s, l) {
+          // Use monthly if set, else fall back to remaining, else full amount
+          var monthly   = +l.monthly   || 0;
+          var remaining = +l.remaining || 0;
+          var amount    = +l.amount    || 0;
+          var ded = monthly > 0 ? monthly : (remaining > 0 ? remaining : amount);
+          return s + ded;
+        }, 0);
 
       var extraDed = d.deductions
         .filter(function(x) {
