@@ -958,10 +958,9 @@ function renderRptPayroll(data, month, currency) {
     '<thead class="table-dark"><tr>'+rptHeaders.map(function(h){ return '<th>'+h+'</th>'; }).join('')+'</tr></thead><tbody>' +
     data.map(function(r){
       return '<tr><td class="fw-semibold">'+esc(r.name)+'</td><td>'+esc(r.dept||'')+'</td>'+
-        '<td>'+fmt(r.gross)+'</td><td class="text-danger">'+fmt(r.gosi)+'</td>'+
+        '<td>'+fmt(r.gross)+'</td>'+
         '<td class="text-danger">'+fmt(r.loanDed)+'</td><td class="text-danger">'+fmt(r.extraDed)+'</td>'+
         '<td class="text-danger">'+fmt(r.absDed+r.lateDed)+'</td>'+
-        '<td class="text-success">'+fmt(r.bonuses+r.arrears)+'</td>'+
         '<td class="fw-bold text-success">'+fmt(r.net)+' '+currency+'</td></tr>';
     }).join('') +
     '</tbody><tfoot class="table-secondary fw-bold"><tr><td colspan="8" class="text-end">الإجمالي</td>'+
