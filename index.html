@@ -852,7 +852,10 @@ function calcPayslips() {
               '<div style="font-size:.68rem;color:var(--text3)">'+currency+'</div>'+
             '</div>'+
           '</div>'+
-          '<div class="mt-2 text-center no-print"><small style="color:var(--accent)"><i class="fas fa-receipt me-1"></i>انقر للعرض والطباعة</small></div>'+
+          '<div class="mt-2 d-flex gap-1 no-print">'+
+            '<button class="btn btn-sm btn-outline-primary w-50" onclick="event.stopPropagation();openPayslip(\''+r.empId+'\',\''+month+'\')"><i class="fas fa-eye me-1"></i>عرض</button>'+
+            '<button class="btn btn-sm btn-outline-secondary w-50" onclick="event.stopPropagation();printOnePayslip(\''+r.empId+'\',\''+month+'\')"><i class="fas fa-print me-1"></i>طباعة</button>'+
+          '</div>'+
         '</div></div>';
     }).join('');
   });
