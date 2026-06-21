@@ -272,30 +272,6 @@ body { background:#f0f2f5; font-family:'Segoe UI',Tahoma,Arial,sans-serif; }
     </div>
   </div>
 
-  <!-- ===== Bonuses ===== -->
-  <div id="bonuses" class="section">
-    <div class="page-header">
-      <h4><i class="fas fa-gift me-2"></i>المكافآت</h4>
-      <button class="btn btn-primary btn-sm no-print" onclick="openBonModal()"><i class="fas fa-plus me-1"></i>إضافة مكافأة</button>
-    </div>
-    <div class="card-box">
-      <div class="card-box-header"><span>سجل المكافآت (<span id="bonCount">0</span>)</span></div>
-      <div class="filter-bar no-print">
-        <input type="text" class="form-control form-control-sm" style="max-width:200px" placeholder="بحث بالاسم..." id="bonSearch" oninput="filterBons()">
-        <input type="month" class="form-control form-control-sm" style="max-width:150px" id="bonMonthFilter" oninput="filterBons()">
-        <select class="form-select form-select-sm" style="max-width:160px" id="bonDeptFilter" onchange="filterBons()">
-          <option value="">كل الفروع</option>
-        </select>
-      </div>
-      <div class="table-responsive p-3">
-        <table class="table table-hover mb-0" id="bonTbl">
-          <thead><tr><th>#</th><th>الموظف</th><th>الفرع</th><th>النوع</th><th>المبلغ</th><th>الشهر</th><th>البيان</th><th class="no-print">إجراءات</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
   <!-- ===== Attendance ===== -->
   <div id="attendance" class="section">
     <div class="page-header">
