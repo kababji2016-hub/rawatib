@@ -558,31 +558,108 @@ input[type="month"].month-styled:focus {
 
 <!-- Loan Modal -->
 <div class="modal fade" id="loanModal" tabindex="-1">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header modal-header-dark">
-        <h5 class="modal-title">إضافة / تعديل قرض أو سلفة</h5>
+        <h5 class="modal-title" id="loanModalTitle"><i class="fas fa-hand-holding-usd me-2"></i>إضافة قرض أو سلفة</h5>
         <button type="button" class="btn-close modal-header-dark" data-bs-dismiss="modal"></button>
       </div>
       <form id="loanForm" onsubmit="doSaveLoan(event)">
         <div class="modal-body">
           <input type="hidden" id="l_id">
-          <div class="mb-3"><label class="form-label">الموظف *</label><select class="form-select" id="l_empId" required></select></div>
-          <div class="mb-3"><label class="form-label">النوع</label>
-            <select class="form-select" id="l_type">
-              <option value="سلفة">سلفة</option><option value="فرض">قرض</option>
-              <option value="personal">شخصي</option><option value="other">أخرى</option>
+
+          <!-- Type selector tabs -->
+          <div class="mb-4">
+            <label class="form-label fw-bold">نوع العملية</label>
+            <div class="d-flex gap-2">
+              <button type="button" id="tab_salaf" class="btn btn-primary flex-fill loan-tab-btn"
+                      onclick="setLoanTab('سلفة')">
+                <i class="fas fa-money-bill-wave me-2"></i>سلفة
+              </button>
+              <button type="button" id="tab_qard" class="btn btn-outline-primary flex-fill loan-tab-btn"
+                      onclick="setLoanTab('قرض')">
+                <i class="fas fa-file-invoice-dollar me-2"></i>قرض
+              </button>
+            </div>
+            <input type="hidden" id="l_type" value="سلفة">
+          </div>
+
+          <!-- Common fields -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الموظف <span class="text-danger">*</span></label>
+              <select class="form-select" id="l_empId" required onchange="onLoanEmpChange()"></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">الفرع</label>
+              <input class="form-control" id="l_dept" readonly style="background:var(--surface2);color:var(--text3)">
+            </div>
+          </div>
+
+          <!-- Advance (سلفة) fields -->
+          <div id="loanFields_salaf">
+            <div class="p-3 mb-3 rounded" style="background:var(--surface2);border:1px solid var(--border)">
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="form-label fw-semibold">مبلغ السلفة <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="l_amount_salaf" min="0" placeholder="0.00">
+                    <span class="input-group-text">ريال</span>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">البيان / السبب</label>
+                  <input class="form-control" id="l_reason_salaf" placeholder="سبب السلفة...">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Loan (قرض) fields -->
+          <div id="loanFields_qard" style="display:none">
+            <div class="p-3 mb-3 rounded" style="background:var(--surface2);border:1px solid var(--border)">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">المبلغ الكلي للقرض <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="l_amount_qard" min="0" placeholder="0.00"
+                           oninput="syncRemainingQ()">
+                    <span class="input-group-text">ريال</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">القسط الشهري <span class="text-danger">*</span></label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="l_monthly_qard" min="0" placeholder="0.00">
+                    <span class="input-group-text">ريال</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">المبلغ المتبقي</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="l_remaining_qard" min="0" placeholder="0.00">
+                    <span class="input-group-text">ريال</span>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">تاريخ القرض</label>
+                  <input type="date" class="form-control" id="l_date_qard">
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-semibold">البيان / السبب</label>
+                  <input class="form-control" id="l_reason_qard" placeholder="سبب القرض...">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status (common) -->
+          <div>
+            <label class="form-label fw-semibold">الحالة</label>
+            <select class="form-select" id="l_status">
+              <option value="active">نشط</option>
+              <option value="settled">مسدّد</option>
             </select>
-          </div>
-          <div class="row g-3">
-            <div class="col-6"><label class="form-label">المبلغ الكلي *</label><input type="number" class="form-control" id="l_amount" required min="0" oninput="syncRemaining()"></div>
-            <div class="col-6"><label class="form-label">القسط الشهري *</label><input type="number" class="form-control" id="l_monthly" required min="0"></div>
-            <div class="col-6"><label class="form-label">المبلغ المتبقي</label><input type="number" class="form-control" id="l_remaining" min="0"></div>
-            <div class="col-6"><label class="form-label">تاريخ القرض</label><input type="date" class="form-control" id="l_date"></div>
-          </div>
-          <div class="mt-3"><label class="form-label">البيان</label><input class="form-control" id="l_reason"></div>
-          <div class="mt-3"><label class="form-label">الحالة</label>
-            <select class="form-select" id="l_status"><option value="active">نشط</option><option value="settled">مسدّد</option></select>
           </div>
         </div>
         <div class="modal-footer">
