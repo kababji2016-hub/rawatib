@@ -1383,16 +1383,44 @@ function doSaveSettings(e) {
 //  CRUD — Employee
 // ============================================================
 function openEmpModal(empId) {
-  var emp=empId?DB.employees.find(function(e){return String(e.id)===String(empId);}):null;
-  setText('empModalTitle', emp?'تعديل موظف':'إضافة موظف');
-  ['id','name','natId','dept','pos','basic','housing','transport','phone','other','iban','joinDate','status'].forEach(function(f){
-    setValue('e_'+f, emp?(emp[f]||''):(f==='status'?'active':''));
+  var emp = empId ? DB.employees.find(function(e){ return String(e.id)===String(empId); }) : null;
+  var isEdit = !!emp;
+  document.getElementById('empModalTitle').innerHTML =
+    '<i class="fas fa-'+(isEdit?'user-edit':'user-plus')+' me-2"></i>'+(isEdit?'تعديل موظف':'إضافة موظف');
+
+  setValue('e_id',          emp ? (emp.id||'')          : '');
+  setValue('e_name',        emp ? (emp.name||'')        : '');
+  setValue('e_dept',        emp ? (emp.dept||'')        : '');
+  setValue('e_natId',       emp ? (emp.natId||'')       : '');
+  setValue('e_nationality', emp ? (emp.nationality||'') : '');
+  setValue('e_basic',       emp ? (emp.basic||'')       : '');
+
+  var status = emp ? (emp.status||'active') : 'active';
+  setValue('e_status', status);
+  document.getElementById('e_status_active').checked   = (status === 'active');
+  document.getElementById('e_status_inactive').checked = (status !== 'active');
+
+  // sync hidden status on radio change
+  ['e_status_active','e_status_inactive'].forEach(function(rid){
+    document.getElementById(rid).onchange = function(){
+      setValue('e_status', this.value);
+    };
   });
+
   modal('empModal');
 }
+
 function doSaveEmp(e) {
   e.preventDefault();
-  var rec={id:val('e_id')||('EMP-'+Date.now()),name:val('e_name'),natId:val('e_natId'),dept:val('e_dept'),pos:val('e_pos'),basic:+val('e_basic')||0,housing:+val('e_housing')||0,transport:+val('e_transport')||0,phone:+val('e_phone')||0,other:+val('e_other')||0,iban:val('e_iban'),joinDate:val('e_joinDate'),status:val('e_status')};
+  var rec = {
+    id:          val('e_id') || ('EMP-'+Date.now()),
+    name:        val('e_name'),
+    dept:        val('e_dept'),
+    natId:       val('e_natId'),
+    nationality: val('e_nationality'),
+    basic:       +val('e_basic') || 0,
+    status:      val('e_status')
+  };
   callServer('syncRecord',{sheet:'employees',record:rec,operation:'upsert'},function(res){
     if (res&&res.success) { closeModal('empModal'); toast('تم حفظ الموظف','success'); loadAll(); }
     else toast('خطأ: '+(res&&res.error),'danger');
